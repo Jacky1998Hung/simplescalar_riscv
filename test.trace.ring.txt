@@ -1,0 +1,2068 @@
+Kanata 0004
+I	0	0	0
+I	1	1	0
+I	2	2	0
+I	3	3	0
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+L	0	0	00010344:jal       x1, 36
+S	0	0	IF
+
+L	0	1	i-cache-miss
+
+L	1	0	00010348:c.mv      t32768x1532768
+S	1	0	IF
+
+L	2	0	0001034a:auipc     x10, 0x0
+S	2	0	IF
+
+L	3	0	0001034e:addi      x10,x10,28
+S	3	0	IF
+
+C	1
+
+I	4	4	0
+I	5	5	0
+I	6	6	0
+I	8	8	0
+I	9	9	0
+I	10	10	0
+I	11	11	0
+I	12	12	0
+I	13	13	0
+I	14	14	0
+S	0	0	DA
+
+L	0	1	mis-pred-branch-occured
+
+S	1	0	DA
+
+S	2	0	DA
+
+S	3	0	DA
+
+L	4	0	00010352:c.ldsp    t24576x1124576
+S	4	0	IF
+
+L	5	0	00010354:c.addi4spnt0x00
+S	5	0	IF
+
+L	6	0	00010356:andi      x2,x2,-16
+S	6	0	IF
+
+C	1
+
+S	2	0	EX
+
+S	1	0	EX
+
+S	0	0	EX
+
+I	7	7	0
+
+L	7	0	00010352:[internal ld/st]
+
+S	7	0	DA
+
+S	4	0	DA
+
+S	5	0	DA
+
+S	6	0	DA
+
+S	3	0	DA
+
+L	8	0	0001035a:c.li      t16384x1316384
+S	8	0	IF
+
+L	9	0	0001035c:c.li      t16384x1416384
+S	9	0	IF
+
+L	10	0	0001035e:c.mv      t32768x1632768
+S	10	0	IF
+
+C	1
+
+R	3	0	0
+
+R	6	0	0
+
+R	5	0	0
+
+R	7	0	0
+
+R	4	0	0
+
+R	3	0	0
+
+R	2	0	0
+
+R	1	0	0
+
+R	9	0	0
+
+R	10	0	0
+
+R	6	0	0
+
+S	0	0	WB
+
+L	0	1	mis-pred-branch-detected
+
+C	1
+
+S	0	0	CT
+
+R	0	0	0
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+L	11	0	00010368:auipc     x3, 0x6d000
+S	11	0	IF
+
+L	11	1	i-cache-miss
+
+L	12	0	0001036c:addi      x3,x3,-760
+S	12	0	IF
+
+L	13	0	00010370:c.jr      t32768x132768
+S	13	0	IF
+
+L	14	0	00010372:c.addi    t0x00
+S	14	0	IF
+
+C	1
+
+I	15	15	0
+I	16	16	0
+I	17	17	0
+I	18	18	0
+I	19	19	0
+I	20	20	0
+I	21	21	0
+I	22	22	0
+S	11	0	DA
+
+S	12	0	DA
+
+S	13	0	DA
+
+L	13	1	mis-pred-branch-occured
+
+S	14	0	DA
+
+L	15	0	00010374:c.jr      t32768x132768
+S	15	0	IF
+
+L	16	0	00010376:<NOP inst>
+S	16	0	IF
+
+L	17	0	0001037a:<NOP inst>
+S	17	0	IF
+
+L	18	0	0001037e:addi      x10,x10,-1936
+S	18	0	IF
+
+C	1
+
+S	14	0	EX
+
+S	13	0	EX
+
+S	11	0	EX
+
+S	15	0	DA
+
+L	15	1	mis-pred-branch-occured
+
+S	16	0	DA
+
+S	17	0	DA
+
+S	18	0	DA
+
+C	1
+
+S	11	0	WB
+
+R	18	0	0
+
+R	17	0	0
+
+R	16	0	0
+
+R	15	0	0
+
+R	14	0	0
+
+S	13	0	WB
+
+L	13	1	mis-pred-branch-detected
+
+S	12	0	EX
+
+C	1
+
+S	11	0	CT
+
+R	11	0	0
+
+S	12	0	WB
+
+C	1
+
+S	12	0	CT
+
+R	12	0	0
+
+S	13	0	CT
+
+R	13	0	0
+
+C	1
+
+L	19	0	00010348:c.mv      t32768x1532768
+S	19	0	IF
+
+L	19	1	i-cache-miss
+
+L	20	0	0001034a:auipc     x10, 0x0
+S	20	0	IF
+
+L	21	0	0001034e:addi      x10,x10,28
+S	21	0	IF
+
+L	22	0	00010352:c.ldsp    t24576x1124576
+S	22	0	IF
+
+C	1
+
+I	24	24	0
+I	25	25	0
+I	26	26	0
+I	27	27	0
+I	28	28	0
+I	29	29	0
+I	30	30	0
+S	19	0	DA
+
+S	20	0	DA
+
+S	21	0	DA
+
+I	23	23	0
+
+L	23	0	00010352:[internal ld/st]
+
+S	23	0	DA
+
+S	22	0	DA
+
+L	24	0	00010354:c.addi4spnt0x00
+S	24	0	IF
+
+L	25	0	00010356:andi      x2,x2,-16
+S	25	0	IF
+
+L	26	0	0001035a:c.li      t16384x1316384
+S	26	0	IF
+
+L	27	0	0001035c:c.li      t16384x1416384
+S	27	0	IF
+
+C	1
+
+S	23	0	EX
+
+L	23	1	i-cache-miss
+
+S	22	0	EX
+
+L	22	1	address-generation
+
+S	20	0	EX
+
+S	19	0	EX
+
+S	24	0	DA
+
+S	25	0	DA
+
+S	26	0	DA
+
+S	27	0	DA
+
+L	28	0	0001035e:c.mv      t32768x1632768
+S	28	0	IF
+
+L	29	0	00010360:jal       x1, 356
+S	29	0	IF
+
+L	30	0	00010364:c.jalr    t36864x036864
+S	30	0	IF
+
+C	1
+
+I	31	31	0
+I	32	32	0
+I	33	33	0
+I	34	34	0
+I	35	35	0
+I	36	36	0
+I	37	37	0
+I	38	38	0
+I	39	39	0
+I	40	40	0
+I	41	41	0
+I	42	42	0
+S	19	0	WB
+
+S	20	0	WB
+
+S	22	0	WB
+
+S	21	0	EX
+
+S	27	0	EX
+
+S	26	0	EX
+
+S	25	0	EX
+
+S	28	0	DA
+
+S	29	0	DA
+
+L	29	1	mis-pred-branch-occured
+
+S	30	0	DA
+
+L	30	1	mis-pred-branch-occured
+
+L	31	0	00000001:addi      x0,x0,0
+S	31	0	IF
+
+L	32	0	00000005:addi      x0,x0,0
+S	32	0	IF
+
+L	33	0	00000009:addi      x0,x0,0
+S	33	0	IF
+
+L	34	0	0000000d:addi      x0,x0,0
+S	34	0	IF
+
+C	1
+
+S	19	0	CT
+
+R	19	0	0
+
+S	20	0	CT
+
+R	20	0	0
+
+S	25	0	WB
+
+S	26	0	WB
+
+S	27	0	WB
+
+S	21	0	WB
+
+S	28	0	EX
+
+S	30	0	EX
+
+S	29	0	EX
+
+S	24	0	EX
+
+S	31	0	DA
+
+S	32	0	DA
+
+S	33	0	DA
+
+S	34	0	DA
+
+L	35	0	00000011:addi      x0,x0,0
+S	35	0	IF
+
+L	36	0	00000015:addi      x0,x0,0
+S	36	0	IF
+
+L	37	0	00000019:addi      x0,x0,0
+S	37	0	IF
+
+L	38	0	0000001d:addi      x0,x0,0
+S	38	0	IF
+
+C	1
+
+S	21	0	CT
+
+R	21	0	0
+
+S	24	0	WB
+
+R	34	0	0
+
+R	33	0	0
+
+R	32	0	0
+
+R	31	0	0
+
+R	30	0	0
+
+R	35	0	0
+
+R	36	0	0
+
+R	37	0	0
+
+R	38	0	0
+
+S	29	0	WB
+
+L	29	1	mis-pred-branch-detected
+
+S	28	0	WB
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+S	23	0	WB
+
+C	1
+
+S	23	0	CT
+
+R	23	0	0
+
+S	22	0	CT
+
+R	22	0	0
+
+S	24	0	CT
+
+R	24	0	0
+
+S	25	0	CT
+
+R	25	0	0
+
+S	26	0	CT
+
+R	26	0	0
+
+C	1
+
+S	27	0	CT
+
+R	27	0	0
+
+S	28	0	CT
+
+R	28	0	0
+
+S	29	0	CT
+
+R	29	0	0
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+L	39	0	000104c4:slli      x14,x11,3
+S	39	0	IF
+
+L	39	1	i-cache-miss
+
+L	40	0	000104c8:c.addi16spt28672x228672
+S	40	0	IF
+
+L	41	0	000104ca:c.addi    t0x140
+S	41	0	IF
+
+L	42	0	000104cc:c.sdsp    t57344x1757344
+S	42	0	IF
+
+C	1
+
+I	44	44	0
+I	45	45	0
+I	46	46	0
+I	47	47	0
+I	52	52	0
+I	53	53	0
+I	54	54	0
+I	55	55	0
+I	59	59	0
+S	39	0	DA
+
+S	40	0	DA
+
+S	41	0	DA
+
+I	43	43	0
+
+L	43	0	000104cc:[internal ld/st]
+
+S	43	0	DA
+
+S	42	0	DA
+
+L	44	0	000104ce:c.sdsp    t57344x957344
+S	44	0	IF
+
+L	45	0	000104d0:c.sdsp    t57344x157344
+S	45	0	IF
+
+L	46	0	000104d2:c.sdsp    t61440x2461440
+S	46	0	IF
+
+L	47	0	000104d4:c.sdsp    t61440x1661440
+S	47	0	IF
+
+C	1
+
+S	40	0	EX
+
+S	39	0	EX
+
+I	48	48	0
+
+L	48	0	000104ce:[internal ld/st]
+
+S	48	0	DA
+
+S	44	0	DA
+
+I	49	49	0
+
+L	49	0	000104d0:[internal ld/st]
+
+S	49	0	DA
+
+S	45	0	DA
+
+I	50	50	0
+
+L	50	0	000104d2:[internal ld/st]
+
+S	50	0	DA
+
+S	46	0	DA
+
+I	51	51	0
+
+L	51	0	000104d4:[internal ld/st]
+
+S	51	0	DA
+
+S	47	0	DA
+
+L	52	0	000104d6:c.sdsp    t61440x961440
+S	52	0	IF
+
+L	53	0	000104d8:c.sdsp    t61440x161440
+S	53	0	IF
+
+L	54	0	000104da:c.sdsp    t57344x2557344
+S	54	0	IF
+
+L	55	0	000104dc:c.sdsp    t61440x861440
+S	55	0	IF
+
+C	1
+
+S	39	0	WB
+
+S	40	0	WB
+
+S	42	0	EX
+
+L	42	1	address-generation
+
+S	43	0	WB
+
+S	44	0	EX
+
+L	44	1	address-generation
+
+S	48	0	WB
+
+I	56	56	0
+
+L	56	0	000104d6:[internal ld/st]
+
+S	56	0	DA
+
+S	52	0	DA
+
+I	57	57	0
+
+L	57	0	000104d8:[internal ld/st]
+
+S	57	0	DA
+
+S	53	0	DA
+
+I	58	58	0
+
+L	58	0	000104da:[internal ld/st]
+
+S	58	0	DA
+
+S	54	0	DA
+
+L	59	0	000104de:c.sdsp    t61440x061440
+S	59	0	IF
+
+C	1
+
+S	39	0	CT
+
+R	39	0	0
+
+S	40	0	CT
+
+R	40	0	0
+
+S	44	0	WB
+
+S	42	0	WB
+
+S	58	0	WB
+
+S	54	0	EX
+
+L	54	1	address-generation
+
+S	57	0	WB
+
+S	53	0	EX
+
+L	53	1	address-generation
+
+C	1
+
+S	53	0	WB
+
+S	54	0	WB
+
+S	45	0	EX
+
+L	45	1	address-generation
+
+S	49	0	WB
+
+S	46	0	EX
+
+L	46	1	address-generation
+
+S	50	0	WB
+
+C	1
+
+S	46	0	WB
+
+S	45	0	WB
+
+S	56	0	WB
+
+S	52	0	EX
+
+L	52	1	address-generation
+
+S	41	0	EX
+
+S	51	0	WB
+
+C	1
+
+S	41	0	WB
+
+S	52	0	WB
+
+S	47	0	EX
+
+L	47	1	address-generation
+
+C	1
+
+S	41	0	CT
+
+R	41	0	0
+
+S	43	0	CT
+
+L	43	1	i-cache-miss
+
+R	43	0	0
+
+S	42	0	CT
+
+L	42	1	i-cache-miss
+
+R	42	0	0
+
+S	48	0	CT
+
+L	48	1	i-cache-miss
+
+R	48	0	0
+
+S	44	0	CT
+
+L	44	1	i-cache-miss
+
+R	44	0	0
+
+S	47	0	WB
+
+I	60	60	0
+
+L	60	0	000104dc:[internal ld/st]
+
+S	60	0	DA
+
+S	55	0	DA
+
+I	61	61	0
+
+L	61	0	000104de:[internal ld/st]
+
+S	61	0	DA
+
+S	59	0	DA
+
+C	1
+
+I	62	62	0
+I	63	63	0
+I	64	64	0
+I	65	65	0
+S	49	0	CT
+
+L	49	1	i-cache-miss
+
+R	49	0	0
+
+S	45	0	CT
+
+L	45	1	i-cache-miss
+
+R	45	0	0
+
+S	50	0	CT
+
+L	50	1	i-cache-miss
+
+R	50	0	0
+
+S	46	0	CT
+
+L	46	1	i-cache-miss
+
+R	46	0	0
+
+S	61	0	WB
+
+S	59	0	EX
+
+L	59	1	address-generation
+
+S	60	0	WB
+
+S	55	0	EX
+
+L	55	1	address-generation
+
+L	62	0	000104e0:c.sdsp    t57344x2457344
+S	62	0	IF
+
+L	62	1	i-cache-miss
+
+L	63	0	000104e2:c.add     t36864x1436864
+S	63	0	IF
+
+L	64	0	000104e4:auipc     x20, 0x71000
+S	64	0	IF
+
+L	65	0	000104e8:addi      x20,x20,284
+S	65	0	IF
+
+C	1
+
+I	67	67	0
+I	68	68	0
+I	69	69	0
+I	70	70	0
+S	51	0	CT
+
+L	51	1	i-cache-miss
+
+R	51	0	0
+
+S	47	0	CT
+
+L	47	1	i-cache-miss
+
+R	47	0	0
+
+S	56	0	CT
+
+L	56	1	i-cache-miss
+
+R	56	0	0
+
+S	52	0	CT
+
+L	52	1	i-cache-miss
+
+R	52	0	0
+
+S	55	0	WB
+
+S	59	0	WB
+
+I	66	66	0
+
+L	66	0	000104e0:[internal ld/st]
+
+S	66	0	DA
+
+S	62	0	DA
+
+S	63	0	DA
+
+S	64	0	DA
+
+S	65	0	DA
+
+L	67	0	000104ec:c.mv      t32768x1832768
+S	67	0	IF
+
+L	68	0	000104ee:c.mv      t32768x1932768
+S	68	0	IF
+
+L	69	0	000104f0:auipc     x13, 0x6a000
+S	69	0	IF
+
+L	70	0	000104f4:sd        x13,x16,632
+S	70	0	IF
+
+C	1
+
+I	72	72	0
+I	73	73	0
+I	74	74	0
+S	57	0	CT
+
+L	57	1	i-cache-miss
+
+R	57	0	0
+
+S	53	0	CT
+
+L	53	1	i-cache-miss
+
+R	53	0	0
+
+S	58	0	CT
+
+L	58	1	i-cache-miss
+
+R	58	0	0
+
+S	54	0	CT
+
+L	54	1	i-cache-miss
+
+R	54	0	0
+
+S	64	0	EX
+
+S	63	0	EX
+
+S	66	0	WB
+
+S	62	0	EX
+
+L	62	1	address-generation
+
+S	67	0	DA
+
+S	68	0	DA
+
+S	69	0	DA
+
+I	71	71	0
+
+L	71	0	000104f4:[internal ld/st]
+
+S	71	0	DA
+
+S	70	0	DA
+
+L	72	0	000104f8:c.mv      t32768x2232768
+S	72	0	IF
+
+L	73	0	000104fa:c.mv      t32768x2132768
+S	73	0	IF
+
+L	74	0	000104fc:sd        x20,x14,0
+S	74	0	IF
+
+C	1
+
+S	60	0	CT
+
+L	60	1	i-cache-miss
+
+R	60	0	0
+
+S	55	0	CT
+
+L	55	1	i-cache-miss
+
+R	55	0	0
+
+S	61	0	CT
+
+L	61	1	i-cache-miss
+
+R	61	0	0
+
+S	59	0	CT
+
+L	59	1	i-cache-miss
+
+R	59	0	0
+
+S	62	0	WB
+
+S	63	0	WB
+
+S	64	0	WB
+
+S	65	0	EX
+
+S	69	0	EX
+
+S	68	0	EX
+
+S	67	0	EX
+
+S	72	0	DA
+
+S	73	0	DA
+
+I	75	75	0
+
+L	75	0	000104fc:[internal ld/st]
+
+S	75	0	DA
+
+S	74	0	DA
+
+C	1
+
+S	66	0	CT
+
+L	66	1	i-cache-miss
+
+R	66	0	0
+
+S	62	0	CT
+
+L	62	1	i-cache-miss
+
+R	62	0	0
+
+S	63	0	CT
+
+R	63	0	0
+
+S	64	0	CT
+
+R	64	0	0
+
+S	67	0	WB
+
+S	68	0	WB
+
+S	69	0	WB
+
+S	65	0	WB
+
+S	74	0	EX
+
+L	74	1	address-generation
+
+S	75	0	WB
+
+S	70	0	EX
+
+L	70	1	address-generation
+
+S	71	0	WB
+
+C	1
+
+S	65	0	CT
+
+R	65	0	0
+
+S	67	0	CT
+
+R	67	0	0
+
+S	68	0	CT
+
+R	68	0	0
+
+S	69	0	CT
+
+R	69	0	0
+
+S	70	0	WB
+
+S	74	0	WB
+
+S	72	0	EX
+
+S	73	0	EX
+
+C	1
+
+S	71	0	CT
+
+L	71	1	i-cache-miss
+
+R	71	0	0
+
+S	70	0	CT
+
+L	70	1	i-cache-miss
+
+R	70	0	0
+
+S	73	0	WB
+
+S	72	0	WB
+
+C	1
+
+S	72	0	CT
+
+R	72	0	0
+
+S	73	0	CT
+
+R	73	0	0
+
+S	75	0	CT
+
+L	75	1	i-cache-miss
+
+R	75	0	0
+
+S	74	0	CT
+
+L	74	1	i-cache-miss
+
+R	74	0	0
+
+C	1
+
+I	76	76	0
+I	77	77	0
+I	78	78	0
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+C	1
+
+L	76	0	00010500:c.ld      t24576x624576
+S	76	0	IF
+
+L	76	1	i-cache-miss
+
+L	77	0	00010502:c.addi    t0x140
+S	77	0	IF
+
+L	78	0	00010504:c.bnez    t61440x3161440
+S	78	0	IF
+
+C	1
+
+I	80	80	0
+I	81	81	0
+I	82	82	0
+I	84	84	0
+I	85	85	0
+I	86	86	0
+I	88	88	0
+I	89	89	0
+I	90	90	0
+I	92	92	0
+I	93	93	0
+I	94	94	0
+I	96	96	0
+I	97	97	0
+I	98	98	0
+I	100	100	0
+I	101	101	0
+I	102	102	0
+I	104	104	0
+I	105	105	0
+I	106	106	0
+S	82	0	EX
+
+C	1
+
+S	83	0	CT
+
+R	83	0	0
+
+S	80	0	CT
+
+R	80	0	0
+
+S	81	0	CT
+
+R	81	0	0
+
+S	82	0	WB
+
+L	84	0	00010500:c.ld      t24576x624576
+S	84	0	IF
+
+L	85	0	00010502:c.addi    t0x140
+S	85	0	IF
+
+L	86	0	00010504:c.bnez    t61440x3161440
+S	86	0	IF
+
+C	1
+
+S	82	0	CT
+
+R	82	0	0
+
+I	87	87	0
+
+L	87	0	00010500:[internal ld/st]
+
+S	87	0	DA
+
+S	84	0	DA
+
+S	85	0	DA
+
+S	86	0	DA
+
+L	88	0	00010500:c.ld      t24576x624576
+S	88	0	IF
+
+L	89	0	00010502:c.addi    t0x140
+S	89	0	IF
+
+L	90	0	00010504:c.bnez    t61440x3161440
+S	90	0	IF
+
+C	1
+
+S	87	0	EX
+
+S	85	0	EX
+
+S	84	0	EX
+
+L	84	1	address-generation
+
+I	91	91	0
+
+L	91	0	00010500:[internal ld/st]
+
+S	91	0	DA
+
+S	88	0	DA
+
+S	89	0	DA
+
+S	90	0	DA
+
+L	92	0	00010500:c.ld      t24576x624576
+S	92	0	IF
+
+L	93	0	00010502:c.addi    t0x140
+S	93	0	IF
+
+L	94	0	00010504:c.bnez    t61440x3161440
+S	94	0	IF
+
+C	1
+
+S	84	0	WB
+
+S	85	0	WB
+
+S	87	0	WB
+
+S	91	0	EX
+
+S	86	0	EX
+
+S	88	0	EX
+
+L	88	1	address-generation
+
+S	89	0	EX
+
+I	95	95	0
+
+L	95	0	00010500:[internal ld/st]
+
+S	95	0	DA
+
+S	92	0	DA
+
+S	93	0	DA
+
+S	94	0	DA
+
+L	96	0	00010500:c.ld      t24576x624576
+S	96	0	IF
+
+L	97	0	00010502:c.addi    t0x140
+S	97	0	IF
+
+L	98	0	00010504:c.bnez    t61440x3161440
+S	98	0	IF
+
+C	1
+
+S	87	0	CT
+
+R	87	0	0
+
+S	84	0	CT
+
+R	84	0	0
+
+S	85	0	CT
+
+R	85	0	0
+
+S	89	0	WB
+
+S	88	0	WB
+
+S	86	0	WB
+
+S	91	0	WB
+
+S	95	0	EX
+
+S	90	0	EX
+
+S	92	0	EX
+
+L	92	1	address-generation
+
+S	93	0	EX
+
+I	99	99	0
+
+L	99	0	00010500:[internal ld/st]
+
+S	99	0	DA
+
+S	96	0	DA
+
+S	97	0	DA
+
+S	98	0	DA
+
+L	100	0	00010500:c.ld      t24576x624576
+S	100	0	IF
+
+L	101	0	00010502:c.addi    t0x140
+S	101	0	IF
+
+L	102	0	00010504:c.bnez    t61440x3161440
+S	102	0	IF
+
+C	1
+
+S	86	0	CT
+
+R	86	0	0
+
+S	91	0	CT
+
+R	91	0	0
+
+S	88	0	CT
+
+R	88	0	0
+
+S	89	0	CT
+
+R	89	0	0
+
+S	93	0	WB
+
+S	92	0	WB
+
+S	90	0	WB
+
+S	95	0	WB
+
+S	99	0	EX
+
+L	99	1	i-cache-miss
+
+S	94	0	EX
+
+S	96	0	EX
+
+L	96	1	address-generation
+
+S	97	0	EX
+
+I	103	103	0
+
+L	103	0	00010500:[internal ld/st]
+
+S	103	0	DA
+
+S	100	0	DA
+
+S	101	0	DA
+
+S	102	0	DA
+
+L	104	0	00010500:c.ld      t24576x624576
+S	104	0	IF
+
+L	105	0	00010502:c.addi    t0x140
+S	105	0	IF
+
+L	106	0	00010504:c.bnez    t61440x3161440
+S	106	0	IF
+
+C	1
+
+I	108	108	0
+I	109	109	0
+I	110	110	0
+S	90	0	CT
+
+R	90	0	0
+
+S	95	0	CT
+
+R	95	0	0
+
+S	92	0	CT
+
+R	92	0	0
+
+S	93	0	CT
+
+R	93	0	0
+
+S	97	0	WB
+
+S	96	0	WB
+
+S	94	0	WB
+
+S	103	0	EX
+
+L	103	1	i-cache-miss
+
+S	100	0	EX
+
+L	100	1	address-generation
+
+S	101	0	EX
+
+I	107	107	0
+
+L	107	0	00010500:[internal ld/st]
+
+S	107	0	DA
+
+S	104	0	DA
+
+S	105	0	DA
+
+S	106	0	DA
+
+L	108	0	00010500:c.ld      t24576x624576
+S	108	0	IF
+
+L	109	0	00010502:c.addi    t0x140
+S	109	0	IF
+
+L	110	0	00010504:c.bnez    t61440x3161440
+S	110	0	IF
+
+C	1
+
+I	112	112	0
+I	113	113	0
+I	114	114	0
+S	94	0	CT
+
+R	94	0	0
+
+S	101	0	WB
+
+S	100	0	WB
+
+S	107	0	EX
+
+L	107	1	i-cache-miss
+
+S	104	0	EX
+
+L	104	1	address-generation
+
+S	105	0	EX
+
+I	111	111	0
+
+L	111	0	00010500:[internal ld/st]
+
+S	111	0	DA
+
+S	108	0	DA
+
+S	109	0	DA
+
+S	110	0	DA
+
+L	112	0	00010500:c.ld      t24576x624576
+S	112	0	IF
+
+L	113	0	00010502:c.addi    t0x140
+S	113	0	IF
+
+L	114	0	00010504:c.bnez    t61440x3161440
+S	114	0	IF
+
+C	1
+
+I	116	116	0
+I	117	117	0
+I	118	118	0
+S	105	0	WB
+
+S	104	0	WB
+
+S	111	0	EX
+
+L	111	1	i-cache-miss
+
+S	108	0	EX
+
+L	108	1	address-generation
+
+S	109	0	EX
+
+I	115	115	0
+
+L	115	0	00010500:[internal ld/st]
+
+S	115	0	DA
+
+S	112	0	DA
+
+S	113	0	DA
+
+S	114	0	DA
+
+L	116	0	00010500:c.ld      t24576x624576
+S	116	0	IF
+
+L	117	0	00010502:c.addi    t0x140
+S	117	0	IF
+
+L	118	0	00010504:c.bnez    t61440x3161440
+S	118	0	IF
+
+C	1
+
+I	120	120	0
+I	121	121	0
+S	109	0	WB
+
+S	108	0	WB
+
+S	115	0	EX
+
+L	115	1	i-cache-miss
+
+S	112	0	EX
+
+L	112	1	address-generation
+
+S	113	0	EX
+
+I	119	119	0
+
+L	119	0	00010500:[internal ld/st]
+
+S	119	0	DA
+
+S	116	0	DA
+
+L	120	0	00010500:c.ld      t24576x624576
+S	120	0	IF
+
+L	121	0	00010502:c.addi    t0x140
+S	121	0	IF
+
+C	1
+
+S	113	0	WB
+
+S	112	0	WB
+
+S	119	0	EX
+
+L	119	1	i-cache-miss
+
+S	116	0	EX
+
+L	116	1	address-generation
+
+C	1
+
+I	122	122	0
+I	124	124	0
+I	125	125	0
+I	126	126	0
+I	128	128	0
+I	129	129	0
+I	130	130	0
+I	132	132	0
+I	133	133	0
+I	134	134	0
+I	136	136	0
+I	137	137	0
+I	138	138	0
+S	98	0	WB
+
+S	114	0	EX
+
+S	117	0	DA
+
+S	118	0	DA
+
+L	122	0	00010504:c.bnez    t61440x3161440
+S	122	0	IF
+
+C	1
+
+S	98	0	CT
+
+R	98	0	0
+
+S	103	0	CT
+
+R	103	0	0
+
+S	100	0	CT
+
+R	100	0	0
+
+S	101	0	CT
+
+R	101	0	0
+
+S	102	0	CT
+
+R	102	0	0
+
+S	114	0	WB
+
+S	118	0	EX
+
+S	117	0	EX
+
+I	123	123	0
+
+L	123	0	00010500:[internal ld/st]
+
+S	123	0	DA
+
+S	120	0	DA
+
+S	121	0	DA
+
+S	122	0	DA
+
+L	124	0	00010500:c.ld      t24576x624576
+S	124	0	IF
+
+L	125	0	00010502:c.addi    t0x140
+S	125	0	IF
+
+L	126	0	00010504:c.bnez    t61440x3161440
+S	126	0	IF
+
+C	1
+
+S	107	0	CT
+
+R	107	0	0
+
+S	104	0	CT
+
+R	104	0	0
+
+S	105	0	CT
+
+R	105	0	0
+
+S	106	0	CT
+
+R	106	0	0
+
+S	111	0	CT
+
+R	111	0	0
+
+S	108	0	CT
+
+R	108	0	0
+
+S	117	0	WB
+
+S	118	0	WB
+
+S	123	0	EX
+
+S	120	0	EX
+
+L	120	1	address-generation
+
+S	121	0	EX
+
+I	127	127	0
+
+L	127	0	00010500:[internal ld/st]
+
+S	127	0	DA
+
+S	124	0	DA
+
+S	125	0	DA
+
+S	126	0	DA
+
+L	128	0	00010500:c.ld      t24576x624576
+S	128	0	IF
+
+L	129	0	00010502:c.addi    t0x140
+S	129	0	IF
+
+L	130	0	00010504:c.bnez    t61440x3161440
+S	130	0	IF
+
+C	1
+
+S	109	0	CT
+
+R	109	0	0
+
+S	110	0	CT
+
+R	110	0	0
+
+S	115	0	CT
+
+R	115	0	0
+
+S	112	0	CT
+
+R	112	0	0
+
+S	113	0	CT
+
+R	113	0	0
+
+S	121	0	WB
+
+S	120	0	WB
+
+S	123	0	WB
+
+S	127	0	EX
+
+S	122	0	EX
+
+S	124	0	EX
+
+L	124	1	address-generation
+
+S	125	0	EX
+
+I	131	131	0
+
+L	131	0	00010500:[internal ld/st]
+
+S	131	0	DA
+
+S	128	0	DA
+
+S	129	0	DA
+
+S	130	0	DA
+
+L	132	0	00010500:c.ld      t24576x624576
+S	132	0	IF
+
+L	133	0	00010502:c.addi    t0x140
+S	133	0	IF
+
+L	134	0	00010504:c.bnez    t61440x3161440
+S	134	0	IF
+
+C	1
+
+S	114	0	CT
+
+R	114	0	0
+
+S	119	0	CT
+
+R	119	0	0
+
+S	116	0	CT
+
+R	116	0	0
+
+S	117	0	CT
+
+R	117	0	0
+
+S	118	0	CT
+
+R	118	0	0
+
+S	125	0	WB
+
+S	124	0	WB
+
+S	122	0	WB
+
+S	127	0	WB
+
+S	131	0	EX
+
+L	131	1	i-cache-miss
+
+S	126	0	EX
+
+S	128	0	EX
+
+L	128	1	address-generation
+
+S	129	0	EX
+
+I	135	135	0
+
+L	135	0	00010500:[internal ld/st]
+
+S	135	0	DA
+
+S	132	0	DA
+
+S	133	0	DA
+
+S	134	0	DA
+
+L	136	0	00010500:c.ld      t24576x624576
+S	136	0	IF
+
+L	137	0	00010502:c.addi    t0x140
+S	137	0	IF
+
+L	138	0	00010504:c.bnez    t61440x3161440
+S	138	0	IF
+
+C	1
+
+I	140	140	0
+I	141	141	0
+I	142	142	0
+S	123	0	CT
+
+R	123	0	0
+
+S	120	0	CT
+
+R	120	0	0
+
+S	121	0	CT
+
+R	121	0	0
+
+S	122	0	CT
+
+R	122	0	0
+
+S	127	0	CT
+
+R	127	0	0
+
+S	124	0	CT
+
+R	124	0	0
+
+S	129	0	WB
+
+S	128	0	WB
+
+S	126	0	WB
+
+S	135	0	EX
+
+L	135	1	i-cache-miss
+
+S	132	0	EX
+
+L	132	1	address-generation
+
+S	133	0	EX
+
+I	139	139	0
+
+L	139	0	00010500:[internal ld/st]
+
+S	139	0	DA
+
+S	136	0	DA
+
+S	137	0	DA
+
+S	138	0	DA
+
+L	140	0	00010500:c.ld      t24576x624576
+S	140	0	IF
+
+L	141	0	00010502:c.addi    t0x140
+S	141	0	IF
+
+L	142	0	00010504:c.bnez    t61440x3161440
+S	142	0	IF
+
+C	1
+
+I	144	144	0
+I	145	145	0
+I	146	146	0
+S	125	0	CT
+
+R	125	0	0
+
+S	126	0	CT
+
+R	126	0	0
+
+S	133	0	WB
+
+S	132	0	WB
+
+S	139	0	EX
+
+L	139	1	i-cache-miss
+
+S	136	0	EX
+
+L	136	1	address-generati

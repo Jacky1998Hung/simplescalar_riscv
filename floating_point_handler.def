@@ -1,0 +1,1202 @@
+/* IEEE 754 */
+#define FLOAT_SIGN(X) (X >> 31)
+#define FLOAT_EXP(X) ((X &    0x7fffffff) >> 23)
+#define FLOAT_DIGITS(X) ( X & 0x007fffff)
+#define DOUBLE_SIGN(X) (X >> 63)
+#define DOUBLE_EXP(X) ((X &    0x7fffffffffffffff) >> 52)
+#define DOUBLE_DIGITS(X) ( X & 0x000fffffffffffff)
+
+/* risc-v ext.D */
+#define NAN_BOX (0xffffffffULL << 32)
+
+/* float */      
+#define FLOAT_MAX   0x7f7fffff
+#define FLOAT_MIN   0x80800000
+#define FLOAT_QUIET_NAN 0x7fc00000
+/* double */
+#define DOUBLE_MAX  0x7fefffffffffffff 
+#define DOUBLE_MIN  0x8010000000000000
+#define DOUBLE_QUIET_NAN 0x7ff8000000000000
+
+/* floating point compute operaotr */
+enum ope{
+   ADD_OPE,
+   SUB_OPE,
+   MUL_OPE,
+   DIV_OPE,
+   MADD_OPE,
+   NMADD_OPE,
+   MSUB_OPE,
+   NMSUB_OPE,
+   SQRT_OPE,
+   LOG_OPE,
+   CMP_OPE,
+   EQ_OPE,
+   MIN_OPE,
+   MAX_OPE,
+};
+
+/* IEEE754 exception define */
+typedef enum special_num{
+   P_NORM,  /* 0, positive normal */
+   N_NORM,  /* 1, negative normal */
+   ZERO_TYPE,    /* 2, 0 or -0 */
+   Q_NAN,   /* 3, quiet NAN */
+   S_NAN,   /* 4, signaling NAN */
+   P_SUBN,  /* 5, positive subnormal */
+   N_SUBN,  /* 6, negative subnormal */
+   P_INF,   /* 7, infinity */
+   N_INF,   /* 8, negative infinity */
+/* 9, valid value incloud positive normal, negative normal, 0, -0, 
+        positive subnormal and negative subnormal*/
+   VALID,   
+/* 10, general NAN incloud quiet NAN and signaling NAN  */
+   G_NAN
+}FloatValueType;
+
+enum FormatType{
+  WORD,
+  U_WORD,
+  LONG,
+  U_LONG,
+  SINGLE,
+  DOUBLE
+};
+
+/* check all single floating point operand */
+#define NAN_BOXED_CHECK(RS) \
+(((FPRD_Q(RS) & NAN_BOX) == NAN_BOX || FPRD(RS) == 0)? FPR_W(RS) : FLOAT_QUIET_NAN)
+
+#define SINGLE_FLOAT_EXCEPTION_HANDLER(FLAG, OPERATOR, EXPR, RS1, RS2, RS3, result)   \
+do{  \
+  w2f_t f1; f1.f = RS1;   \
+  w2f_t f2; f2.f = RS2;   \
+  w2f_t f3; f3.f = RS3;   \
+  w2f_t res; res.f = EXPR;  \
+  w2f_t prod; prod.f = 0.0;  \
+  word_t sign1, exp1, digits1;  \
+  word_t sign2, exp2, digits2;  \
+  word_t sign3, exp3, digits3;  \
+  word_t sign_res, exp_res, digits_res;  \
+  word_t sign_prod, exp_prod, digits_prod;  \
+  FloatValueType type1, type2, type3, type_res, type_prod;  \
+  bool quiet = false;   \
+  IEEE754_SINGLE_DEFINE(f1.w, type1, sign1, exp1, digits1);  \
+  IEEE754_SINGLE_DEFINE(f2.w, type2, sign2, exp2, digits2);  \
+  IEEE754_SINGLE_DEFINE(f3.w, type3, sign3, exp3, digits3);  \
+  IEEE754_SINGLE_DEFINE(res.w, type_res, sign_res, exp_res, digits_res);  \
+  switch(OPERATOR) {    \
+        case MADD_OPE: prod.f =  RS1 * RS2;  break; \
+        case NMADD_OPE: prod.f =  -(RS1 * RS2);    break;  \
+        case MSUB_OPE: prod.f =  RS1 * RS2;  break; \
+        case NMSUB_OPE: prod.f =  -(RS1 * RS2);  break; \
+        default: break; \
+  } \
+  IEEE754_SINGLE_DEFINE(prod.w, type_prod, sign_prod, exp_prod, digits_prod);  \
+  /* NV, Invalid Operation ? */ \
+  FLOAT_EXCEPTION_NV_HANDLER(FLAG, OPERATOR, type1, type2, type3, RS1, RS2, RS3); \
+  /* DZ, Divide by Zero? */  \
+  if(!(FLAG & NV)) \
+  FLOAT_EXCEPTION_DZ_HANDLER(FLAG, OPERATOR, type2);   \
+  /* OF, Overflow */   \
+  if(!(FLAG & NV) && !(FLAG & DZ)) \
+    FLOAT_EXCEPTION_OF_HANDLER(FLAG, OPERATOR, SINGLE);  \
+  /* UF, Underflow */  \
+  if(!(FLAG & NV) && !(FLAG & DZ) && !(FLAG & OF)) \
+    FLOAT_EXCEPTION_UF_HANDLER(FLAG, OPERATOR);  \
+  /* NX, Inexact */    \
+  if(!(FLAG & NV)) \
+    FLOAT_EXCEPTION_NX_HANDLER(FLAG, OPERATOR, RS1, RS2, RS3, res.f, SINGLE);   \  
+  \
+  if(FLAG & NV || quiet){  \
+    /* return Quiet NaN (qNaN) */ \
+    result = 0; \
+    sign_res = 0; \
+    exp_res = 255;  \
+    digits_res = 0x400000;  \
+    res.w = ((sign_res << 31) | (exp_res << 23) | digits_res); \
+    result = res.w; \
+  } \
+}while(0)
+
+#define DOUBLE_FLOAT_EXCEPTION_HANDLER(FLAG, OPERATOR, EXPR, RS1, RS2, RS3, result)   \
+do{  \
+  q2d_t d1; d1.d = RS1;   \
+  q2d_t d2; d2.d = RS2;   \
+  q2d_t d3; d3.d = RS3;   \
+  q2d_t res; res.d = EXPR;  \
+  q2d_t prod; prod.d = 0.0;  \
+  qword_t sign1, exp1, digits1;  \
+  qword_t sign2, exp2, digits2;  \
+  qword_t sign3, exp3, digits3;  \
+  qword_t sign_res, exp_res, digits_res;  \
+  qword_t sign_prod, exp_prod, digits_prod;  \
+  FloatValueType type1, type2, type3, type_res, type_prod;  \
+  bool quiet = false;   \
+  IEEE754_DOUBLE_DEFINE(d1.q, type1, sign1, exp1, digits1);  \
+  IEEE754_DOUBLE_DEFINE(d2.q, type2, sign2, exp2, digits2);  \
+  IEEE754_DOUBLE_DEFINE(d3.q, type3, sign3, exp3, digits3);  \
+  IEEE754_DOUBLE_DEFINE(res.q, type_res, sign_res, exp_res, digits_res);  \
+  switch(OPERATOR) {    \
+        case MADD_OPE: prod.d =  RS1 * RS2;  break; \
+        case NMADD_OPE: prod.d =  -(RS1 * RS2);    break;  \
+        case MSUB_OPE: prod.d =  RS1 * RS2;  break; \
+        case NMSUB_OPE: prod.d =  -(RS1 * RS2);  break; \
+        default: break; \
+  } \
+  IEEE754_DOUBLE_DEFINE(prod.q, type_prod, sign_prod, exp_prod, digits_prod);  \
+  /* NV, Invalid Operation ? */ \
+  FLOAT_EXCEPTION_NV_HANDLER(FLAG, OPERATOR, type1, type2, type3, RS1, RS2, RS3); \
+  /* DZ, Divide by Zero? */  \
+  if(!(FLAG & NV)) \
+        FLOAT_EXCEPTION_DZ_HANDLER(FLAG, OPERATOR, type2);   \
+  /* OF, Overflow */   \
+  if(!(FLAG & NV) && !(FLAG & DZ)) \
+        FLOAT_EXCEPTION_OF_HANDLER(FLAG, OPERATOR, DOUBLE);  \
+  /* UF, Underflow */  \
+  if(!(FLAG & NV) && !(FLAG & DZ) && !(FLAG & OF)) \
+        FLOAT_EXCEPTION_UF_HANDLER(FLAG, OPERATOR);  \
+  /* NX, Inexact */    \
+  if(!(FLAG & NV)) \
+        FLOAT_EXCEPTION_NX_HANDLER(FLAG, OPERATOR, RS1, RS2, RS3, res.d, DOUBLE);   \  
+  \
+  if(FLAG & NV || quiet){  \
+    /* return Quiet NaN (qNaN) */ \
+    result = 0; \
+    sign_res = 0; \
+    exp_res = 2047;  \
+    digits_res = 0x8000000000000;  \
+    res.q = ((sign_res << 63) | (exp_res << 52) | digits_res); \
+    result = res.q; \
+  } \
+}while(0)
+
+#define IEEE754_SINGLE_DEFINE(num, type, sign, exp, digits);   \
+do{   \
+   type = 0; \
+   sign = FLOAT_SIGN(num); \
+   exp = FLOAT_EXP(num);   \
+   digits = FLOAT_DIGITS(num);   \
+   if(exp == 0 && digits == 0)   \
+      type = ZERO_TYPE;   /* 0 or -0 */  \
+   else if(sign == 0 && exp == 255 && digits == 0)   \
+      type = P_INF; /* inf */   \
+   else if(sign == 1 && exp == 255 && digits == 0)   \
+      type = N_INF;  /* -inf */  \
+   else if(exp == 255 && (digits & 0x400000))   \
+      type = Q_NAN; /* Quiet NaN (qNaN) */   \
+   else if(exp == 255 && digits != 0)  \
+      type = S_NAN;  /* Signaling NaN (sNaN) */  \
+   else if(sign == 0 && exp == 0 && digits != 0)   \
+      type = P_SUBN;  /* positive subnormal */   \
+   else if(sign == 1 && exp == 0 && digits != 0)   \
+      type = N_SUBN; /* negative subnormal */   \
+   else if(sign == 1)  \
+      type = N_NORM;  /* negative normal */   \
+    else  \
+      type = P_NORM; /* positive normal */   \
+}while(0)
+
+#define IEEE754_DOUBLE_DEFINE(num, type, sign, exp, digits);   \
+do{   \
+   type = 0; \
+   sign = DOUBLE_SIGN(num); \
+   exp = DOUBLE_EXP(num);   \
+   digits = DOUBLE_DIGITS(num);   \
+   if(exp == 0 && digits == 0)   \
+      type = ZERO_TYPE;   /* 0 or -0 */  \
+   else if(sign == 0 && exp == 2047 && digits == 0)   \
+      type = P_INF; /* inf */   \
+   else if(sign == 1 && exp == 2047 && digits == 0)   \
+      type = N_INF;  /* -inf */  \
+   else if(exp == 2047 && (digits & 0x8000000000000))   \
+      type = Q_NAN; /* Quiet NaN (qNaN) */   \
+   else if(exp == 2047 && digits != 0)  \
+      type = S_NAN;  /* Signaling NaN (sNaN) */  \
+   else if(sign == 0 && exp == 0 && digits != 0)   \
+      type = P_SUBN;  /* positive subnormal */   \
+   else if(sign == 1 && exp == 0 && digits != 0)   \
+      type = N_SUBN; /* negative subnormal */   \
+   else if(sign == 1)  \
+      type = N_NORM;  /* negative normal */   \
+    else  \
+      type = P_NORM; /* positive normal */   \
+}while(0)
+
+#define FLOAT_EXCEPTION_NV_HANDLER(FLAG, OPERATOR, type1, type2, type3, RS1, RS2, RS3)   \
+do{   \
+   switch(OPERATOR){ \
+      case ADD_OPE:  \
+         if((type1 == P_INF && type2 == N_INF) || (type1 == N_INF && type2 == P_INF) || \
+            type1 == S_NAN || type2 == S_NAN)  \
+            FLAG |= NV; \
+         if(type1 == Q_NAN || type2 == Q_NAN)   \
+            quiet = true;   \
+         break;   \
+      case SUB_OPE:  \
+         if((type1 == P_INF && type2 == P_INF) || (type1 == N_INF && type2 == N_INF) || \
+            type1 == S_NAN || type2 == S_NAN)  \
+            FLAG |= NV; \
+         if(type1 == Q_NAN || type2 == Q_NAN)   \
+            quiet = true;   \
+         break;   \
+      case MUL_OPE:  \
+         if(((type1 == P_INF)||(type1 == N_INF)) && type2 == ZERO_TYPE)   \
+            FLAG |= NV; \
+         if(type1 == ZERO_TYPE && ((type2 == P_INF)||(type2 == N_INF)))  \
+            FLAG |= NV; \
+         if(type1 == S_NAN || type2 == S_NAN)   \
+            FLAG |= NV; \
+         if(type1 == Q_NAN || type2 == Q_NAN)   \
+            quiet = true;   \
+         break;   \
+      case DIV_OPE:  \
+         if(type1 == ZERO_TYPE && type2 == ZERO_TYPE)  \
+             FLAG |= NV; \
+         if((type1 == P_INF || type1 == N_INF) && (type2 == P_INF || type2 == N_INF))   \
+            FLAG |= NV; \
+         if(type1 == S_NAN || type2 == S_NAN)   \
+            FLAG |= NV; \
+         if(type1 == Q_NAN || type2 == Q_NAN)   \
+            quiet = true;   \
+         break;   \
+      case SQRT_OPE: \
+          if(type1 == N_NORM || type1 ==N_SUBN || type1 == N_INF ||type1 == S_NAN) \
+            FLAG |= NV; \
+          if(type1 == Q_NAN)    \
+           quiet = true;    \
+      case LOG_OPE:  \
+         break;   \
+      case CMP_OPE: \
+         if(type1 == S_NAN || type1 == Q_NAN || type2 == S_NAN || type2 == Q_NAN)   \
+            FLAG |= NV; \
+      case EQ_OPE: \
+         if(type1 == S_NAN || type2 == S_NAN)   \
+            FLAG |= NV; \
+         break; \
+      case MADD_OPE:    \
+      case NMSUB_OPE:   \
+            /* mul */    \
+         if(((type1 == P_INF)||(type1 == N_INF)) && type2 == ZERO_TYPE)   \
+            FLAG |= NV; \
+         if(type1 == ZERO_TYPE && ((type2 == P_INF)||(type2 == N_INF)))  \
+            FLAG |= NV; \
+         if(type1 == S_NAN || type2 == S_NAN)   \
+            FLAG |= NV; \
+         if(type1 == Q_NAN || type2 == Q_NAN)   \
+            quiet = true;   \
+            /* add */    \
+         if(!(CSRS(FLAG) & NV) && !quiet){ \
+            if((type_prod == P_INF && type3 == N_INF) || (type_prod == N_INF && type3 == P_INF) || \
+                type_prod == S_NAN || type3 == S_NAN)  \
+                FLAG |= NV; \
+            if(type_prod == Q_NAN || type3 == Q_NAN)   \
+                quiet = true;   \
+         }  \
+      case MSUB_OPE:    \
+      case NMADD_OPE:   \
+            /* mul */    \
+         if(((type1 == P_INF)||(type1 == N_INF)) && type2 == ZERO_TYPE)   \
+            FLAG |= NV; \
+         if(type1 == ZERO_TYPE && ((type2 == P_INF)||(type2 == N_INF)))  \
+            FLAG |= NV; \
+         if(type1 == S_NAN || type2 == S_NAN)   \
+            FLAG |= NV; \
+         if(type1 == Q_NAN || type2 == Q_NAN)   \
+            quiet = true;   \
+           /* sub */    \
+         if(!(CSRS(FLAG) & NV) && !quiet){ \
+            if((type_prod == P_INF && type3 == P_INF) || (type_prod == N_INF && type3 == N_INF) || \
+                type_prod == S_NAN || type3 == S_NAN)  \
+                FLAG |= NV; \ 
+            if(type_prod == Q_NAN || type3 == Q_NAN)   \
+                quiet = true;   \
+         }  \
+         break;   \
+      default: \
+         break;   \
+   }  \
+}while(0)
+
+#define FLOAT_EXCEPTION_DZ_HANDLER(FLAG, OPERATOR, type2)   \
+do{   \
+   if(OPERATOR == DIV_OPE && type2 == ZERO_TYPE) \
+      FLAG |= DZ; /* 0 or -0 */ \
+}while(0)
+
+#define FLOAT_EXCEPTION_OF_HANDLER(FLAG, OPERATOR, PRECISE) \
+do{ \
+    if(PRECISE == SINGLE) { \
+        switch(OPERATOR){ \
+            case ADD_OPE:   \
+            case SUB_OPE:   \
+            case MUL_OPE:   \
+            case DIV_OPE:   \
+                if(exp_res == 255 && digits_res == 0)  \
+                    FLAG |= OF; \
+                break;  \
+            case MADD_OPE:  \
+            case MSUB_OPE:  \
+            case NMADD_OPE: \
+            case NMSUB_OPE: \
+                if(exp_prod == 255 && digits_prod == 0)  \
+                    FLAG |= OF; \
+                if(exp_res == 255 && digits_res == 0)  \
+                    FLAG |= OF; \
+                break;  \
+            default: break; \
+        } \  
+    }   \
+    else if(PRECISE == DOUBLE) {    \
+        switch(OPERATOR){ \
+            case ADD_OPE:   \
+            case SUB_OPE:   \
+            case MUL_OPE:   \
+            case DIV_OPE:   \
+                if(exp_res == 2047 && digits_res == 0)  \
+                    FLAG |= OF; \
+                break;  \
+            case MADD_OPE:  \
+            case MSUB_OPE:  \
+            case NMADD_OPE: \
+            case NMSUB_OPE: \
+                if(exp_prod == 2047 && digits_prod == 0)  \
+                    FLAG |= OF; \
+                if(exp_res == 2047 && digits_res == 0)  \
+                    FLAG |= OF; \
+                break;  \
+            default: break; \
+        } \  
+    }   \
+}while(0)
+
+#define FLOAT_EXCEPTION_UF_HANDLER(FLAG, OPERATOR) \
+do{ \
+    switch(OPERATOR){ \
+        case ADD_OPE:   \
+        case SUB_OPE:   \
+        case MUL_OPE:   \
+        case DIV_OPE:   \
+            if(exp_res == 0 && digits_res != 0)  \
+                FLAG |= UF; \
+            break;  \
+        case MADD_OPE:  \
+        case MSUB_OPE:  \
+        case NMADD_OPE: \
+        case NMSUB_OPE: \
+            if(exp_prod == 0 && digits_prod == !0)  \
+                FLAG |= OF; \
+            if(exp_res == 0 && digits_res == !0)  \
+                FLAG |= OF; \
+            break;  \
+        default: break; \
+    } \  
+}while(0)
+
+#define FLOAT_EXCEPTION_NX_HANDLER(FLAG, OPERATOR, RS1, RS2, RS3, RES, PRECISE)   \
+do{   \
+    q2d_t d1; d1.d = RS1;   \
+    q2d_t d2; d2.d = RS2;   \
+    q2d_t d3; d3.d = RS3;   \
+   if(PRECISE == SINGLE) { \
+        switch(OPERATOR){ \
+            case ADD_OPE:   \
+                if((d1.d + d2.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case SUB_OPE: \
+                if((d1.d - d2.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case MUL_OPE: \
+                if((d1.d * d2.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case DIV_OPE: \
+                if((d1.d / d2.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case SQRT_OPE:    \
+                if(sqrt(d1.d) != RES) {   \            
+                    FLAG |= NX; \
+                }   \
+                break;   \
+            case MADD_OPE:  \
+                if(((d1.d * d2.d) + d3.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case MSUB_OPE:  \
+                if(((d1.d * d2.d) - d3.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case NMADD_OPE:  \
+                if(((-(d1.d * d2.d)) - d3.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case NMSUB_OPE:  \
+                if(((-(d1.d * d2.d)) + d3.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            default: \
+                break;   \
+            }  \
+    }    \
+   else if(PRECISE == DOUBLE) { \
+        switch(OPERATOR){ \
+            case ADD_OPE:   \
+                if(((long double)d1.d + (long double)d2.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case SUB_OPE: \
+                if(((long double)d1.d - (long double)d2.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case MUL_OPE: \
+                if(((long double)d1.d * (long double)d2.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case DIV_OPE: \
+                if(((long double)d1.d / (long double)d2.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case SQRT_OPE:    \
+                if(sqrtl((long double)d1.d) != RES) {   \            
+                    FLAG |= NX; \
+                }   \
+                break;   \
+            case MADD_OPE:  \
+                if((((long double)d1.d * (long double)d2.d) + (long double)d3.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case MSUB_OPE:  \
+                if((((long double)d1.d * (long double)d2.d) - (long double)d3.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case NMADD_OPE:  \
+                if(((-((long double)d1.d *(long double) d2.d)) - (long double)d3.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            case NMSUB_OPE:  \
+                if(((-((long double)d1.d * (long double)d2.d)) + (long double)d3.d) != RES) \
+                    FLAG |= NX; \
+                break;   \
+            default: \
+                break;   \
+            }  \
+   }    \
+}while(0)
+
+#define SINGLE_INVALID_INPUT_DETECT(OPERATOR, RS1, RS2, IsInvalid)  \
+do{ \
+  w2f_t f1; f1.f = RS1;   \
+  w2f_t f2; f2.f = RS2;   \
+  word_t sign1, exp1, digits1;  \
+  word_t sign2, exp2, digits2;  \
+  FloatValueType type1, type2;  \
+  IEEE754_SINGLE_DEFINE(f1.w, type1, sign1, exp1, digits1);  \
+  IEEE754_SINGLE_DEFINE(f2.w, type2, sign2, exp2, digits2);  \
+  \
+    if(OPERATOR == CMP_OPE){    \
+        if(type1 == Q_NAN || type1 == S_NAN ||  \
+            type2 == Q_NAN || type2 == S_NAN)    \
+            IsInvalid = true;    \
+    } else if(OPERATOR == EQ_OPE)   \
+        if(type1 == Q_NAN || type1 == S_NAN ||  \
+            type2 == Q_NAN || type2 == S_NAN)    \
+            IsInvalid = true;   \
+}while(0)
+
+#define DOUBLE_INVALID_INPUT_DETECT(OPERATOR, RS1, RS2, IsInvalid)  \
+do{ \
+  q2d_t d1; d1.d = RS1;   \
+  q2d_t d2; d2.d = RS2;   \
+  qword_t sign1, exp1, digits1;  \
+  qword_t sign2, exp2, digits2;  \
+  FloatValueType type1, type2;  \
+  IEEE754_DOUBLE_DEFINE(d1.q, type1, sign1, exp1, digits1);  \
+  IEEE754_DOUBLE_DEFINE(d2.q, type2, sign2, exp2, digits2);  \
+  \
+    if(OPERATOR == CMP_OPE){    \
+        if(type1 == Q_NAN || type1 == S_NAN ||  \
+            type2 == Q_NAN || type2 == S_NAN)    \
+            IsInvalid = true;    \
+    } else if(OPERATOR == EQ_OPE)   \
+        if(type1 == Q_NAN || type1 == S_NAN ||  \
+            type2 == Q_NAN || type2 == S_NAN)    \
+            IsInvalid = true;   \
+}while(0)
+
+#define IsNAN(SRC, type, _IsNAN)  \
+do{ \
+  w2f_t src; src.f = SRC;  \
+  word_t sign, exp, digits;  \
+  IEEE754_SINGLE_DEFINE(src.w, type, sign, exp, digits);   \
+  if((type == S_NAN || type == Q_NAN || type == S_NAN || type == Q_NAN))  \
+    _IsNAN = true; \
+}while(0)
+
+#define IsINF(SRC, type, _IsINF)  \
+do{ \
+  w2f_t src; src.f = SRC;  \
+  word_t sign, exp, digits;  \
+  IEEE754_SINGLE_DEFINE(src.w, type, sign, exp, digits);   \
+  if(type == P_INF || type == N_INF || type == P_INF || type == N_INF)   \
+    _IsINF = true; \
+}while(0)
+
+#define SINGLE_FLOAT_RM(SRC, TAR, RoundMode)  \
+do{ \
+    float integer_part = SRC;    \
+    float fractional_part = 0;   \
+    switch(RoundMode){   \
+        case RNE: RNE_EXE(SRC); break; \
+        case RTZ: RTZ_EXE(SRC); break; \
+        case RDN: RDN_EXE(SRC); break; \
+        case RUP: RUP_EXE(SRC); break; \
+        case RMM: RMM_EXE(SRC); break; \
+        default: break; \
+   }    \
+   float full_result = integer_part + fractional_part;  \
+   TAR = full_result;   \
+}while(0)
+
+#define FLOAT_FORMAT_CONVERT(SRC, SRC_T, TAR, TAR_T, RoundMode) \
+do{ \
+  union conv_type{ \
+    float f;  \
+    double d; \
+    sword_t sw; \
+    word_t uw;  \
+    sqword_t sq; \
+    qword_t uq;  \
+  }converter; \
+  \
+  switch(SRC_T){  \
+    case WORD: converter.sw = SRC; break;   \
+    case U_WORD: converter.uw = SRC; break;   \
+    case LONG: converter.sq = SRC; break;   \
+    case U_LONG: converter.uq = SRC; break;   \
+    case SINGLE: converter.f = SRC; break;   \
+    case DOUBLE: converter.d = SRC; break;   \
+    default: /*do nothing */ break;  \
+  } \
+  \
+  bool invalid = false; \
+  bool inexact = false; \
+  bool overRange = false;   \
+  bool quiet = false;   \
+  FloatValueType type;    \
+  if(SRC_T == SINGLE){   \
+    word_t sign, exp, mantissa; \    
+    IEEE754_SINGLE_DEFINE(converter.uw, type, sign, exp, mantissa);   \
+    IsNAN(converter.f, type, invalid); \
+    IsINF(converter.f, type, invalid); \
+    /* input 0 */   \
+    if(type == ZERO_TYPE)    \
+        TAR = 0;    \
+    /* invalid input */  \    
+    if(invalid && type != ZERO_TYPE){ \
+        VALUE_INVALID_CHECK(converter.f, type, TAR, TAR_T);   \
+    }else{  \
+        /* overRange input */   \
+        VALUE_OVERRANGE_CHECK(converter.f, SINGLE, type, TAR, TAR_T);    \
+    }   \
+  } \
+  if(SRC_T == DOUBLE){   \
+    qword_t sign, exp, mantissa; \    
+    IEEE754_DOUBLE_DEFINE(converter.uq, type, sign, exp, mantissa);   \
+    IsNAN(converter.d, type, invalid); \
+    IsINF(converter.d, type, invalid); \
+    /* input 0 */   \
+    if(type == ZERO_TYPE)    \
+        TAR = 0;    \
+    /* invalid input */  \    
+    if(invalid && type != ZERO_TYPE){ \
+        VALUE_INVALID_CHECK(converter.d, type, TAR, TAR_T);   \
+    }else{  \
+        /* overRange input */   \
+        VALUE_OVERRANGE_CHECK(converter.d, DOUBLE, type, TAR, TAR_T);    \
+    }   \
+  } \
+  if(!invalid && !overRange && !inexact && !quiet && type != ZERO_TYPE) {   \
+    switch(SRC_T){  \
+        case WORD: \
+        case U_WORD:    \
+        case LONG:  \
+        case U_LONG:    \
+        case SINGLE: SINGLE_TO_CONVERT(converter.f, SRC_T, TAR, TAR_T, RoundMode, invalid, inexact); break; \
+        case DOUBLE: DOUBLE_TO_CONVERT(converter.d, SRC_T, TAR, TAR_T, RoundMode, invalid, inexact); break; \
+        default: /*do nothing */ break;  \
+    } \
+  } \
+    \
+  switch(TAR_T){  \
+    case WORD: TAR = converter.sw; break;   \
+    case U_WORD: TAR = converter.uw; break;   \
+    case LONG: TAR = converter.sq; break;   \
+    case U_LONG: TAR = converter.uq; break;   \
+    case SINGLE: TAR = converter.f; break;   \
+    case DOUBLE: TAR = converter.d; break;   \
+    default: /*do nothing */ break;  \
+  } \ 
+  if((invalid & !quiet) | overRange) SET_CSRS(FFLAGS, NV);   \
+  if(inexact) SET_CSRS(FFLAGS, NX);    \
+}while(0)
+
+#define VALUE_INVALID_CHECK(SRC, TYPE, TAR, TAR_T)    \
+do{ \
+    switch(TAR_T){  \
+            case WORD: \
+                if(type == N_INF)   \
+                    converter.sw = INT32_MIN;    \
+                if(type == S_NAN || type == P_INF) \
+                    converter.sw = INT32_MAX;   \                
+                if(type == Q_NAN){   \
+                    converter.sw = INT32_MAX;   \
+                    quiet = true;   \
+                }   \
+                break;   \
+            case U_WORD: \                
+                if(type == N_INF)   \
+                    converter.uw = 0;    \
+                if(type == S_NAN || type == P_INF) \
+                    converter.uw = UINT32_MAX;   \   
+                if(type == Q_NAN){   \
+                    converter.uw = UINT32_MAX;   \
+                    quiet = true;   \
+                }   \  
+                break;   \
+            case LONG:  \
+                if(type == N_INF){   \
+                    converter.sq = INT64_MIN;    \
+                }   \
+                if(type == S_NAN || type == P_INF) \
+                    converter.sq = INT64_MAX;   \     
+                if(type == Q_NAN){   \
+                    converter.sq = INT64_MAX;   \
+                    quiet = true;   \
+                }   \
+                break;   \
+            case U_LONG:    \
+                if(type == N_INF)   \
+                    converter.uq = UINT64_MIN;    \
+                if(type == S_NAN || type == P_INF) \
+                    converter.uq = UINT64_MAX;   \     
+                if(type == Q_NAN){   \
+                    converter.uq = UINT64_MAX;   \
+                    quiet = true;   \
+                }   \
+                break;   \
+            case SINGLE: \
+                if(type == P_INF) \
+                    converter.f = INFINITY;  \
+                if(type == N_INF)   \
+                    converter.f = -INFINITY;    \
+                if(type == S_NAN) \
+                    converter.sw = FLOAT_QUIET_NAN;   \     
+                if(type == Q_NAN){   \
+                    converter.sw = FLOAT_QUIET_NAN;   \
+                    quiet = true;   \
+                }   \
+                break;  \
+            case DOUBLE:    \
+                if(type == P_INF) \
+                    converter.f = INFINITY;  \
+                if(type == N_INF)   \
+                    converter.f = -INFINITY;    \
+                if(type == S_NAN) \
+                    converter.sq = DOUBLE_QUIET_NAN;   \     
+                if(type == Q_NAN){   \
+                    converter.sq = DOUBLE_QUIET_NAN;   \
+                    quiet = true;   \
+                }   \
+                break;  \
+            default: /*do nothing */ break;  \
+        }   \
+}while(0)
+
+#define VALUE_OVERRANGE_CHECK(SRC, SRC_T, SRC_F_TYPE, TAR, TAR_T)    \
+do{ \
+    w2f_t src_f; src_f.f = SRC;   \
+    q2d_t src_d; src_d.d = SRC;   \
+    bool res = false;   \
+    switch(SRC_F_TYPE){  \
+            case P_NORM:    \
+            case P_SUBN:    \
+                if(TAR_T == WORD) {if(SRC > INT32_MAX) {overRange = true; converter.sw = INT32_MAX;}}   \
+                if(TAR_T == U_WORD) {if(SRC > UINT32_MAX) {overRange = true; converter.uw = UINT32_MAX;}}   \
+                if(TAR_T == LONG) {if(SRC > INT64_MAX) {overRange = true; converter.sq = INT64_MAX;}}   \
+                if(TAR_T == U_LONG) {if(SRC > UINT64_MAX) {overRange = true; converter.uq = UINT64_MAX;}}   \
+                if(TAR_T == SINGLE) {   \
+                    bool flt = false;   \
+                    if(SRC_T == SINGLE) \
+                        FLOAT_LESS_THAN(SINGLE, FLOAT_MAX, src_f.w, flt);  \
+                    else    \
+                        FLOAT_LESS_THAN(DOUBLE, DOUBLE_MAX, src_d.q, flt);  \
+                    if(!flt) { \
+                        overRange = true;   \
+                        converter.f = src_f.f;    \
+                    }   \
+                }   \
+                if(TAR_T == DOUBLE){   \
+                    bool flt = false;   \
+                    if(SRC_T == SINGLE) \
+                        FLOAT_LESS_THAN(SINGLE, FLOAT_MAX, src_f.w, flt);  \
+                    else    \
+                        FLOAT_LESS_THAN(DOUBLE, DOUBLE_MAX, src_d.q, flt);  \
+                    if(!flt) { \
+                        overRange = true;   \
+                        converter.d = src_d.d;    \
+                    }   \
+                }   \
+                break;  \
+            case N_NORM:    \
+            case N_SUBN:    \       
+                if(TAR_T == WORD) {if(SRC < INT32_MIN) {overRange = true; converter.sw = INT32_MIN;}}   \
+                if(TAR_T == U_WORD) {if(SRC < INT32_MIN) {overRange = true; converter.uw = UINT32_MIN;}}   \
+                if(TAR_T == LONG) {if(SRC < INT64_MIN) {overRange = true; converter.sq = INT64_MIN;}}   \
+                if(TAR_T == U_LONG) {if(SRC < INT64_MIN) {overRange = true; converter.uq = UINT64_MIN;}}   \
+                if(TAR_T == SINGLE) {   \
+                    bool flt = false;   \
+                    if(SRC_T == SINGLE) \
+                        FLOAT_LESS_THAN(SINGLE, src_f.w, FLOAT_MIN, flt);  \
+                    else    \
+                        FLOAT_LESS_THAN(DOUBLE, src_d.q, DOUBLE_MIN, flt);  \
+                    if(flt) { \
+                        overRange = true;   \
+                        converter.f = src_f.f;    \
+                    }   \
+                }   \
+                if(TAR_T == DOUBLE){   \
+                    bool flt = false;   \
+                    if(SRC_T == SINGLE) \
+                        FLOAT_LESS_THAN(SINGLE, src_f.w, FLOAT_MIN, flt);  \
+                    else    \
+                        FLOAT_LESS_THAN(DOUBLE, src_d.q, DOUBLE_MIN, flt);  \
+                    if(flt) { \
+                        overRange = true;   \
+                        converter.d = src_d.d;    \
+                    }   \
+                }   \
+                break;  \
+            default: /*do nothing */ break;  \
+        }   \
+}while(0)
+
+#define FLOAT_LESS_THAN(PRECISE, F1, F2, RES)  \
+do{ \
+    qword_t sign1, exp1, mantissa1;  \
+    qword_t sign2, exp2, mantissa2;  \
+    if(PRECISE == SINGLE) { \
+        sign1 = FLOAT_SIGN(F1); \
+        exp1 = FLOAT_EXP(F1);   \
+        mantissa1 = FLOAT_DIGITS(F1);    \
+        sign2 = FLOAT_SIGN(F2); \
+        exp2 = FLOAT_EXP(F2);   \
+        mantissa2 = FLOAT_DIGITS(F2);    \
+    }   \
+    else {  \
+        sign1 = DOUBLE_SIGN(F1); \
+        exp1 = DOUBLE_EXP(F1);   \
+        mantissa1 = DOUBLE_DIGITS(F1);    \
+        sign2 = DOUBLE_SIGN(F2); \
+        exp2 = DOUBLE_EXP(F2);   \
+        mantissa2 = DOUBLE_DIGITS(F2);    \
+    }   \
+    bool done = false;  \
+    if(sign1 != sign2)  \
+        if(sign1 == 0) { RES = 1; done = true;} \
+        else {RES = 0; done = true;}    \
+    if(!done && exp1 != exp2)   \
+        if(sign1 == 0)  \
+            if(exp1 > exp2) { RES = 0; done = true; }   \
+            else {RES = 1; done = true;} \
+        else    \
+            if(exp1 < exp2) { RES = 1; done = true; }   \
+            else {RES = 0; done = true;} \
+    if(!done && mantissa1 != mantissa2) \
+        if(sign1 == 0)  \
+            if(mantissa1 > mantissa2) { RES = 0; done = true; }   \
+            else {RES = 1; done = true;} \
+        else    \
+            if(mantissa1 < mantissa2) { RES = 1; done = true; }   \
+            else {RES = 0; done = true;} \            
+}while(0)
+
+#define SINGLE_TO_CONVERT(SRC, SRC_T, TAR, TAR_T, RoundMode, invalid, inexact) \
+do{ \
+   float integer_part = SRC; \
+   float fractional_part = 0;   \
+   switch(RoundMode){   \
+        case RNE: RNE_EXE(SRC); break;  \
+        case RTZ: RTZ_EXE(SRC); break;  \
+        case RDN: RDN_EXE(SRC); break; \
+        case RUP: RUP_EXE(SRC); break; \
+        case RMM: RMM_EXE(SRC); break; \
+        default: break; \
+   }    \
+   float full_result = integer_part + fractional_part;  \
+   w2f_t src_f; src_f.f = SRC;   \
+   q2d_t src_d; src_d.d = SRC;   \
+   bool res = false;   \
+   switch(TAR_T){  \
+        case WORD: \
+            if(full_result > 0 && full_result > INT32_MAX) \
+                { invalid = true; converter.sw = INT32_MAX;}  \
+            if(full_result < 0 && full_result < INT32_MIN)  \
+                { invalid = true; converter.sw = INT32_MIN;}  \
+            break;   \
+        case U_WORD: \
+            if(full_result > 0 && full_result > UINT32_MAX) \
+                { invalid = true; converter.uw = UINT32_MAX;}  \
+            if(full_result < 0 && full_result < UINT32_MIN) \
+                { invalid = true; converter.uw = UINT32_MIN;}  \
+            break;   \
+        case LONG:  \
+            if(full_result > 0 && full_result > INT64_MAX)  \
+                { invalid = true; converter.sq = INT64_MAX;}  \
+            if(full_result < 0 && full_result < INT64_MIN)  \
+                { invalid = true; converter.sq = INT64_MIN;}  \
+            break;   \
+        case U_LONG: \
+            if(full_result > 0 && full_result > UINT64_MAX) \
+                { invalid = true; converter.uq = UINT64_MAX;}  \
+            if(full_result < 0 && full_result < UINT64_MIN) \
+                { invalid = true; converter.uq = UINT64_MIN;}  \
+            break;   \
+        default: /*do nothing */ break;  \
+    } \
+    if(!invalid && full_result != SRC) \
+        inexact = true;   \
+    if(!invalid){   \
+        switch(TAR_T){  \
+            case WORD: converter.sw = (sword_t)full_result; TAR = converter.sw; break;   \
+            case U_WORD: converter.uw = (word_t)full_result; TAR = converter.uw; break;   \
+            case LONG: converter.sq = (sqword_t)full_result; TAR = converter.sq; break;   \
+            case U_LONG: converter.uq = (qword_t)full_result; TAR = converter.uq; break;   \
+            case SINGLE: converter.f = (qword_t)full_result; TAR = converter.f; break;   \
+            case DOUBLE: converter.d = (qword_t)full_result; TAR = converter.d; break;   \
+            default: /*do nothing */ break;  \
+        }   \   
+    }   \
+}while(0)
+
+#define DOUBLE_TO_CONVERT(SRC, SRC_T, TAR, TAR_T, RoundMode, invalid, inexact) \
+do{ \
+   double integer_part = SRC;   \ 
+   double fractional_part = 0;   \
+   switch(RoundMode){   \
+        case RNE: RNE_EXE(SRC); break;  \
+        case RTZ: RTZ_EXE(SRC); break;  \
+        case RDN: RDN_EXE(SRC); break; \
+        case RUP: RUP_EXE(SRC); break; \
+        case RMM: RMM_EXE(SRC); break; \
+        default: break; \
+   }    \
+   double full_result= integer_part + fractional_part;  \
+   q2d_t fr_tmp; fr_tmp.d = full_result;    \
+   bool flt = false;   \
+   switch(TAR_T){  \
+        case WORD: \
+            if(full_result > 0 && full_result > INT32_MAX) \
+                { invalid = true; converter.sw = INT32_MAX;}  \
+            if(full_result < 0 && full_result < INT32_MIN)  \
+                { invalid = true; converter.sw = INT32_MIN;}  \
+            break;   \
+        case U_WORD: \
+            if(full_result > 0 && full_result > UINT32_MAX) \
+                { invalid = true; converter.uw = UINT32_MAX;}  \
+            if(full_result < 0 && full_result < UINT32_MIN) \
+                { invalid = true; converter.uw = UINT32_MIN;}  \
+            break;   \
+        case LONG:  \
+            if(full_result > 0 && full_result > INT64_MAX)  \
+                { invalid = true; converter.sq = INT64_MAX;}  \
+            if(full_result < 0 && full_result < INT64_MIN)  \
+                { invalid = true; converter.sq = INT64_MIN;}  \
+            break;   \
+        case U_LONG: \
+            if(full_result > 0 && full_result > UINT64_MAX) \
+                { invalid = true; converter.uq = UINT64_MAX;}  \
+            if(full_result < 0 && full_result < UINT64_MIN) \
+                { invalid = true; converter.uq = UINT64_MIN;}  \
+            break;   \
+        case SINGLE: \
+            if(SRC_T == SINGLE) \
+                FLOAT_LESS_THAN(SINGLE, FLOAT_MAX, fr_tmp.q, flt);  \
+            else    \
+                FLOAT_LESS_THAN(DOUBLE, DOUBLE_MAX, fr_tmp.q, flt);  \
+            if(full_result > 0 && flt) { \
+                invalid = true;  \
+                converter.sw = FLOAT_MAX;    \
+            }   \
+            if(SRC_T == SINGLE) \
+                FLOAT_LESS_THAN(SINGLE, fr_tmp.q, FLOAT_MIN, flt);  \
+            else    \
+                FLOAT_LESS_THAN(DOUBLE, fr_tmp.q, DOUBLE_MIN, flt);  \
+            if(full_result < 0 && flt) { \
+                invalid = true;  \
+                converter.sw = FLOAT_MIN;    \
+            }   \
+            break;   \
+        case DOUBLE: \
+            if(SRC_T == SINGLE) \
+                FLOAT_LESS_THAN(SINGLE, DOUBLE_MAX, fr_tmp.q, flt);  \
+            else    \
+                FLOAT_LESS_THAN(DOUBLE, DOUBLE_MAX, fr_tmp.q, flt);  \
+            if(full_result > 0 && flt) { \
+                invalid = true;  \
+                converter.sq = DOUBLE_MAX;    \
+            }   \
+            if(SRC_T == SINGLE) \
+                FLOAT_LESS_THAN(SINGLE, fr_tmp.q, DOUBLE_MIN, flt);  \
+            else    \
+                FLOAT_LESS_THAN(DOUBLE, fr_tmp.q, DOUBLE_MIN, flt);  \
+            if(full_result < 0 && flt) { \
+                invalid = true;  \
+                converter.sq = DOUBLE_MIN;    \
+            }   \
+            break;   \
+        default: /*do nothing */ break;  \
+    } \
+    if(!invalid && full_result != SRC) \
+        inexact = true;   \
+    if(!invalid){   \
+        switch(TAR_T){  \
+            case WORD: converter.sw = (sword_t)full_result; TAR = converter.sw; break;   \
+            case U_WORD: converter.uw = (word_t)full_result; TAR = converter.uw; break;   \
+            case LONG: converter.sq = (sqword_t)full_result; TAR = converter.sq; break;   \
+            case U_LONG: converter.uq = (qword_t)full_result; TAR = converter.uq; break;   \
+            case SINGLE: converter.f = (float)full_result; TAR = converter.f; break;   \
+            case DOUBLE: converter.d = (double)full_result; TAR = converter.d; break;   \
+            default: /*do nothing */ break;  \
+        }   \   
+    }   \
+}while(0)
+
+#define RNE_EXE(SRC) \
+do{ \
+    integer_part = truncl(SRC); \
+    fractional_part = SRC - integer_part;   \
+    if (fractional_part > 0.5L) {   \
+        integer_part += 1.0L; \
+    } else if (fractional_part < 0.5L) {    \
+        /* do nothing */    \
+    } else if(fractional_part == 0.5L){    \
+        if (fmodl(integer_part, 2.0L) == 0.0L) {    \
+            /* do nothing */    \
+        } else {    \
+            integer_part += 1.0L;   \
+        }   \
+    }   \
+    fractional_part = 0;    \
+}while(0)
+
+#define RTZ_EXE(SRC)    \
+do{ \
+    integer_part = truncl(SRC); \
+    fractional_part = 0;   \
+}while(0)
+
+#define RDN_EXE(SRC)    \
+do{ \
+    integer_part = truncl(SRC); \
+    fractional_part = SRC - integer_part;   \
+    if(SRC < 0 && (fractional_part != 0))   \
+        integer_part -= 1.0L;   \
+     fractional_part = 0;    \
+}while(0)
+
+#define RUP_EXE(SRC)    \
+do{ \
+    integer_part = truncl(SRC); \
+    fractional_part = SRC - integer_part;   \
+    if(SRC > 0 && (fractional_part != 0))   \
+        integer_part += 1.0L;   \
+     fractional_part = 0;    \
+}while(0)
+
+#define RMM_EXE(SRC)    \
+do{ \
+    integer_part = truncl(SRC); \
+    fractional_part = SRC - integer_part;   \
+    if(SRC > 0 && (fractional_part != 0))   \
+        integer_part += 1.0L;   \
+    if(SRC < 0 && (fractional_part != 0))   \
+        integer_part -= 1.0L;   \
+     fractional_part = 0;    \
+}while(0)
+
+#define F_SINGLE_CMP(COMPARE_OPE, SRC1, SRC2, RES, isInvalid)   \
+do{ \
+    enum FloatTypeCompareValue{  \
+        N_INF_T = -202, \
+        VALID_T = 1,  \
+        Q_NAN_T = 102,    \
+        S_NAN_T = 103,    \
+        P_INF_T = 202,    \
+    };  \
+    w2f_t f1; f1.f = SRC1;  \
+    w2f_t f2; f2.f = SRC2;  \
+    word_t sign1, exp1, digits1;  \
+    word_t sign2, exp2, digits2;  \
+    FloatValueType type1, type2;  \
+    IEEE754_SINGLE_DEFINE(f1.w, type1, sign1, exp1, digits1);  \
+    IEEE754_SINGLE_DEFINE(f2.w, type2, sign2, exp2, digits2);  \
+    enum FloatTypeCompareValue type_cv1, type_cv2 ,res_cv = 1;   \
+    switch(type1){  \
+        case Q_NAN: type_cv1 = Q_NAN_T; break;  \
+        case S_NAN: type_cv1 = S_NAN_T; break;  \
+        case P_INF: type_cv1 = P_INF_T; break;  \
+        case N_INF: type_cv1 = N_INF_T; break;  \
+        default: type_cv1 = VALID_T; break; \
+    }   \
+    switch(type2){  \
+        case Q_NAN: type_cv2 = Q_NAN_T; break;  \
+        case S_NAN: type_cv2 = S_NAN_T; break;  \
+        case P_INF: type_cv2 = P_INF_T; break;  \
+        case N_INF: type_cv2 = N_INF_T; break;  \
+        default: type_cv2 = VALID_T; break; \
+    }   \
+    if(type_cv1 == VALID_T && type_cv2 == VALID_T) { \
+        if(COMPARE_OPE == MIN_OPE) {    \
+            if(f1.f <= f2.f) {  \
+                if(f1.f < f2.f) \
+                    RES = f1.f; \
+                else if(sign1 == 1)/* f1 == f2, compare sign bit */   \
+                    RES = f1.f; \ 
+                else    \
+                    RES = f2.f; \                   
+            }   \
+            else    \
+                RES = f2.f; \
+        }   \
+        else {  \
+            if(f1.f >= f2.f) {  \
+                if(f1.f > f2.f) \
+                    RES = f1.f; \
+                else if(sign1 == 0)/* f1 == f2, compare sign bit */   \
+                    RES = f1.f; \   
+                else    \
+                    RES = f2.f; \                 
+            }   \
+            else    \
+                RES = f2.f; \
+        }   \
+        res_cv = 0; \
+    }   \
+    else if((type_cv1 == Q_NAN_T && type_cv2 == Q_NAN_T))   \
+        res_cv = Q_NAN_T; \
+    else if((type_cv1 == Q_NAN_T && type_cv2 == S_NAN_T) ||     \
+            (type_cv1 == S_NAN_T && type_cv2 == Q_NAN_T) ||     \
+            (type_cv1 == S_NAN_T && type_cv2 == S_NAN_T)) {    \
+        res_cv = Q_NAN_T;    \
+        isInvalid = true;  \
+    }   \
+    else {    \
+        if(type_cv1 == S_NAN_T || type_cv2 == S_NAN_T)  \
+            isInvalid = true;  \
+        res_cv = type_cv1 < type_cv2 ? type_cv1 : type_cv2; \
+    }   \
+    \
+    w2f_t fres; \
+    switch(res_cv){    \
+        case Q_NAN_T: fres.w = 0x7FC00000; RES = fres.f; break;  \
+        case P_INF_T: fres.w = 0x7F800000; RES = fres.f; break;  \
+        case N_INF_T: fres.w = 0xFF800000; RES = fres.f; break;  \
+        case VALID_T: \
+            if((type_cv1 == VALID_T) && (type_cv2 != VALID_T))  \
+                RES = f1.f; \
+            else  \
+                RES = f2.f; \
+            break;  \
+        default:   break;  \
+    }   \
+}while(0)
+
+#define F_DOUBLE_CMP(COMPARE_OPE, SRC1, SRC2, RES, isInvalid)   \
+do{ \
+    enum FloatTypeCompareValue{  \
+        N_INF_T = -202, \
+        VALID_T = 1,  \
+        Q_NAN_T = 102,    \
+        S_NAN_T = 103,    \
+        P_INF_T = 202,    \
+    };  \
+    q2d_t d1; d1.d = SRC1;  \
+    q2d_t d2; d2.d = SRC2;  \
+    qword_t sign1, exp1, digits1;  \
+    qword_t sign2, exp2, digits2;  \
+    FloatValueType type1, type2;  \
+    IEEE754_DOUBLE_DEFINE(d1.q, type1, sign1, exp1, digits1);  \
+    IEEE754_DOUBLE_DEFINE(d2.q, type2, sign2, exp2, digits2);  \
+    enum FloatTypeCompareValue type_cv1, type_cv2 ,res_cv = 1;   \
+    switch(type1){  \
+        case Q_NAN: type_cv1 = Q_NAN_T; break;  \
+        case S_NAN: type_cv1 = S_NAN_T; break;  \
+        case P_INF: type_cv1 = P_INF_T; break;  \
+        case N_INF: type_cv1 = N_INF_T; break;  \
+        default: type_cv1 = VALID_T; break; \
+    }   \
+    switch(type2){  \
+        case Q_NAN: type_cv2 = Q_NAN_T; break;  \
+        case S_NAN: type_cv2 = S_NAN_T; break;  \
+        case P_INF: type_cv2 = P_INF_T; break;  \
+        case N_INF: type_cv2 = N_INF_T; break;  \
+        default: type_cv2 = VALID_T; break; \
+    }   \
+    if(type_cv1 == VALID_T && type_cv2 == VALID_T) { \
+        if(COMPARE_OPE == MIN_OPE) {    \
+            if(d1.d <= d2.d) {  \
+                if(d1.d < d2.d) \
+                    RES = d1.d; \
+                else if(sign1 == 1)/* f1 == f2, compare sign bit */   \
+                    RES = d1.d; \ 
+                else    \
+                    RES = d2.d; \                   
+            }   \
+            else    \
+                RES = d2.d; \
+        }   \
+        else {  \
+            if(d1.d >= d2.d) {  \
+                if(d1.d > d2.d) \
+                    RES = d1.d; \
+                else if(sign1 == 0)/* f1 == f2, compare sign bit */   \
+                    RES = d1.d; \   
+                else    \
+                    RES = d2.d; \                 
+            }   \
+            else    \
+                RES = d2.d; \
+        }   \
+        res_cv = 0; \
+    }   \
+    else if((type_cv1 == Q_NAN_T && type_cv2 == Q_NAN_T))   \
+        res_cv = Q_NAN_T; \
+    else if((type_cv1 == Q_NAN_T && type_cv2 == S_NAN_T) ||     \
+            (type_cv1 == S_NAN_T && type_cv2 == Q_NAN_T) ||     \
+            (type_cv1 == S_NAN_T && type_cv2 == S_NAN_T)) {    \
+        res_cv = Q_NAN_T;    \
+        isInvalid = true;  \
+    }   \
+    else {    \
+        if(type_cv1 == S_NAN_T || type_cv2 == S_NAN_T)  \
+            isInvalid = true;  \
+        res_cv = type_cv1 < type_cv2 ? type_cv1 : type_cv2; \
+    }   \
+    \
+    q2d_t fres; \
+    switch(res_cv){    \
+        case Q_NAN_T: fres.q = 0x7FF8000000000000; RES = fres.d; break;  \
+        case P_INF_T: fres.q = 0x7FF0000000000000; RES = fres.d; break;  \
+        case N_INF_T: fres.q = 0xFFF0000000000000; RES = fres.d; break;  \
+        case VALID_T: \
+            if((type_cv1 == VALID_T) && (type_cv2 != VALID_T))  \
+                RES = d1.d; \
+            else  \
+                RES = d2.d; \
+            break;  \
+        default:   break;  \
+    }   \
+}while(0)

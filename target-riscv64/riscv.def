@@ -1,0 +1,3831 @@
+/* DEFINST(OP, MSK, NAME, OPFORM, RES, FLAGS, O1, O2, O3, I1, I2, I3, I4)*/
+
+// RISCV I
+/* U type LUI, AUIPC */
+#define LUI_IMPL \
+{ \
+    SET_GPR(RD, SEXT(UIMM)); \
+}
+DEFINST(LUI,
+0x37,
+"lui", "d, U",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD), DNA, DNA, DNA,
+        DNA, DNA, DNA
+)
+#define AUIPC_IMPL \
+{ \
+    SET_GPR(RD, SEXT(UIMM) + CPC); \
+}
+DEFINST(AUIPC,
+0x17,
+"auipc", "d, U",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD), DNA, DNA,
+        DNA, DNA, DNA, DNA
+)
+/* J type JAL  */
+#define JAL_IMPL \
+{ \
+    SET_GPR(RD, CPC+4); \
+    SET_TPC( CPC + SEXT(JIMM) ); \
+    SET_NPC( CPC + SEXT(JIMM) ); \
+}
+DEFINST(JAL,
+0x6f,
+"jal", "d, j",
+IntALU, F_CTRL|F_UNCOND|F_DIRJMP,
+DGPR(RD), DNA, DNA,
+        DNA, DNA, DNA, DNA
+)
+
+/* I type JALR */
+#define JALR_IMPL                        \
+{                                \
+    qword_t _rd = CPC + 4;                    \
+    SET_TPC((GPR(RS1) + SEXT(IMM)));            \
+    SET_NPC((GPR(RS1) + SEXT(IMM)));            \
+    SET_GPR(RD, _rd);                    \
+}
+
+DEFINST(JALR,
+0x67, "jalr", "d,s,i",
+IntALU, F_CTRL|F_UNCOND|F_INDIRJMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+
+/* B type Branch link */
+DEFLINK(BRANCH_LINK,
+0x63, "branch_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+
+/* I type Load link */
+DEFLINK(LOAD_LINK,
+0x03, "load_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+/* S type Safe link */
+DEFLINK(SAVE_LINK,
+0x23, "save_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+/* I type INTI_LINK */
+DEFLINK(INTI_LINK,
+0x13, "inti_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+
+DEFLINK(INTIW_LINK,
+0x1b, "intiw_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+/* I type FENCE_LINK */
+DEFLINK(FENCE_LINK,
+0x0f, "fence_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+
+/* EBREAK */
+DEFLINK(ENV_AND_CSR_LINK,
+0x73,"env_and_csr_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+
+/* R type INTR_LINK */
+DEFLINK(INTR_LINK,
+0x33, "intr_link", FUNCT7_SHIFT, FUNCT7_MASK, NA)
+
+DEFLINK(INTRW_LINK,
+0x3b, "intrw_link", FUNCT7_SHIFT, FUNCT7_MASK, NA)
+
+#ifdef RV64A
+DEFLINK(A_EXTENSION_LINK, 0b0101111, "a_extension_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+#endif //RV64A
+
+#ifdef RV64F
+DEFLINK(FL_LINK,     0b0000111, "fl_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+DEFLINK(FS_LINK,     0b0100111, "fs_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+DEFLINK(FMADD_LINK,  0b1000011, "fmadd_link", FUNCT2_SHIFT, FUNCT2_MASK, NA)
+DEFLINK(FMSUB_LINK,  0b1000111, "fmsub_link", FUNCT2_SHIFT, FUNCT2_MASK, NA)
+DEFLINK(FNMSUB_LINK, 0b1001011, "fnmsub_link", FUNCT2_SHIFT, FUNCT2_MASK, NA)
+DEFLINK(FNMADD_LINK, 0b1001111, "fnmadd_link", FUNCT2_SHIFT, FUNCT2_MASK, NA)
+DEFLINK(FLOATS_LINK, 0b1010011, "floats_link", FUNCT7_SHIFT, FUNCT7_MASK, NA)
+
+#endif //RV64F
+
+#ifdef RV64C
+DEFLINK(C0_LINK, 0x00, "c0_link", FUNCT3_C_SHIFT, FUNCT3_C_MASK, NA)
+DEFLINK(C1_LINK, 0x01, "c1_link", FUNCT3_C_SHIFT, FUNCT3_C_MASK, NA)
+DEFLINK(C2_LINK, 0x02, "c2_link", FUNCT3_C_SHIFT, FUNCT3_C_MASK, NA)
+#endif //RV64C
+
+
+// Begin connect
+CONNECT(INTR_LINK)
+
+DEFLINK(I_INTR_LINK_0,
+0x00, "i_intr_link_0" ,FUNCT3_SHIFT,FUNCT3_MASK, NA)
+#ifdef RV64M
+DEFLINK(RV64M_LINK, 0x01, "rv64m_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+#endif /* RV64M */
+
+DEFLINK(I_INTR_LINK_64,
+0x20, "i_intr_link_64", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+
+CONNECT(INTRW_LINK)
+DEFLINK(I_INTRW_LINK_0,
+0x00, "i_intrw_link_0" ,FUNCT3_SHIFT,FUNCT3_MASK, NA)
+#ifdef RV64M
+DEFLINK(RV64MW_LINK, 0x01, "rv64mw_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+#endif
+DEFLINK(I_INTRW_LINK_64,
+0x20, "i_intrw_link_64", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+
+CONNECT(BRANCH_LINK)
+#define BEQ_IMPL                        \
+{                                \
+    SET_TPC(CPC + SEXT(BIMM));                    \
+    if (GPR(RS1) == GPR(RS2))    {            \
+        SET_NPC(CPC + SEXT(BIMM));                \
+    }                            \
+}
+DEFINST(BEQ,
+0x00, "beq", "s,S,b",
+IntALU, F_CTRL|F_COND|F_DIRJMP,
+DNA, DNA, DNA, DNA,
+DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define BNE_IMPL                        \
+{                                \
+    SET_TPC(CPC + SEXT(BIMM));                \
+    if (GPR(RS1) != GPR(RS2))         \
+        SET_NPC(CPC + SEXT(BIMM));            \
+}
+DEFINST(BNE,
+0x01, "bne", "s,S,b",
+IntALU, F_CTRL|F_COND|F_DIRJMP,
+DNA, DNA, DNA, DNA,
+DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define BLT_IMPL                        \
+{                                \
+    SET_TPC(CPC + SEXT(BIMM));                    \
+    if ((ext_signed_t)GPR(RS1) < (ext_signed_t)GPR(RS2))    {            \
+        SET_NPC(CPC + SEXT(BIMM));                \
+    }                            \
+}
+DEFINST(BLT,
+0x04, "blt", "s,S,b",
+IntALU, F_CTRL|F_COND|F_DIRJMP,
+DNA, DNA, DNA, DNA,
+DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define BGE_IMPL                        \
+{                                \
+    SET_TPC(CPC + SEXT(BIMM));                    \
+    if ((ext_signed_t)GPR(RS1) >= (ext_signed_t)GPR(RS2))    {            \
+        SET_NPC(CPC + SEXT(BIMM));                \
+    }                            \
+}
+DEFINST(BGE,
+0x05, "bge", "s,S,b",
+IntALU, F_CTRL|F_COND|F_DIRJMP,
+DNA, DNA,  DNA, DNA,
+DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define BLTU_IMPL                        \
+{                                \
+    SET_TPC(CPC + SEXT(BIMM));                    \
+    if ((ext_unsigned_t)GPR(RS1) < (ext_unsigned_t)GPR(RS2)){\
+        SET_NPC(CPC + SEXT(BIMM));                \
+    }                            \
+}
+DEFINST(BLTU,
+0x06, "bltu", "s,S,b",
+IntALU, F_CTRL|F_COND|F_DIRJMP,
+DNA, DNA, DNA, DNA,
+DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define BGEU_IMPL                        \
+{                                \
+    SET_TPC(CPC + SEXT(BIMM));                    \
+    if ((ext_unsigned_t)GPR(RS1) >= (ext_unsigned_t)GPR(RS2)){\
+        SET_NPC(CPC + SEXT(BIMM));                \
+    }                            \
+}
+DEFINST(BGEU,
+0x07, "bgeu", "s,S,b",
+IntALU, F_CTRL|F_COND|F_DIRJMP,
+DNA, DNA, DNA, DNA,
+DGPR(RS1), DGPR(RS2), DNA
+)
+
+
+CONNECT(LOAD_LINK)
+#define LB_IMPL                        \
+{                                \
+    sbyte_t _result;                    \
+    enum md_fault_type _fault;                \
+                                \
+    _result = READ_BYTE((GPR(RS1) + SEXT(IMM)), _fault);        \
+    if (_fault != md_fault_none)                \
+          DECLARE_FAULT(_fault);                \
+    SET_GPR(RD, _result);    \
+}
+DEFINST(LB,
+0x00, "lb", "d,s,i",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define LH_IMPL                        \
+{                                \
+    shalf_t _result;                    \
+    enum md_fault_type _fault;                \
+    _result = READ_HALF((GPR(RS1) + SEXT(IMM)), _fault);        \
+    if (_fault != md_fault_none)                \
+          DECLARE_FAULT(_fault);                \
+    SET_GPR(RD, (ext_signed_t)_result);    \
+}
+DEFINST(LH,
+0x01, "lh", "d,s,i",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define LW_IMPL                  \
+{                                \
+    sword_t _result;             \
+    enum md_fault_type _fault;   \
+    _result = READ_WORD((GPR(RS1) + SEXT(IMM)), _fault);    \
+    if (_fault != md_fault_none)                \
+          DECLARE_FAULT(_fault);                \
+    SET_GPR(RD, (ext_signed_t)(_result));    \
+}
+DEFINST(LW,
+0x02, "lw", "d,s,i",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define LD_IMPL                        \
+{                                \
+    sqword_t _result;                        \
+    enum md_fault_type _fault;                \
+    _result = READ_QWORD((GPR(RS1) + SEXT(IMM)), _fault);    \
+    if (_fault != md_fault_none)                \
+          DECLARE_FAULT(_fault);                \
+    SET_GPR(RD, _result);    \
+}
+DEFINST(LD,
+0x03, "ld", "d,s,i",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define LBU_IMPL                        \
+{                                \
+    byte_t _result;                        \
+    enum md_fault_type _fault;                \
+                                \
+    _result = READ_BYTE((GPR(RS1) + SEXT(IMM)), _fault);    \
+    if (_fault != md_fault_none)                \
+          DECLARE_FAULT(_fault);                \
+    SET_GPR(RD, (ext_unsigned_t)_result);            \
+}
+DEFINST(LBU,
+0x04, "lbu", "d,s,i",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define LHU_IMPL                        \
+{                                \
+    half_t _result;                        \
+    enum md_fault_type _fault;                \
+                                \
+    _result = READ_HALF((GPR(RS1) + SEXT(IMM)), _fault);    \
+    if (_fault != md_fault_none)                \
+          DECLARE_FAULT(_fault);                \
+    SET_GPR(RD, (ext_unsigned_t)_result);            \
+}
+
+DEFINST(LHU,
+0x05, "lhu", "d,s,i",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define LWU_IMPL                        \
+{                                \
+    word_t _result;                        \
+    enum md_fault_type _fault;                \
+                                \
+    _result = READ_WORD((GPR(RS1) + SEXT(IMM)), _fault);    \
+    if (_fault != md_fault_none)                \
+          DECLARE_FAULT(_fault);                \
+    SET_GPR(RD, (ext_unsigned_t)_result);    \
+}
+DEFINST(LWU,
+0x06, "lwu", "d,s,i",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+
+CONNECT(SAVE_LINK)
+#define SB_IMPL                        \
+{                                \
+    byte_t _src;                        \
+    enum md_fault_type _fault;                \
+                                \
+    _src = BYTE_MASK & (GPR(RS2));    \
+    WRITE_BYTE(_src, (GPR(RS1) + SEXT(SIMM)),  _fault);    \
+    if (_fault != md_fault_none)                \
+        DECLARE_FAULT(_fault);                \
+}
+DEFINST(SB,
+0x00, "sb", "s,S,b",
+WrPort, F_MEM|F_STORE|F_DISP,
+DNA, DNA,  DNA,
+DNA,
+DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SH_IMPL                            \
+{                                \
+    half_t _src;                        \
+    enum md_fault_type _fault;                \
+                                \
+    _src = HALF_MASK & (GPR(RS2));    \
+    WRITE_HALF(_src, (GPR(RS1) + SEXT(SIMM)),  _fault);    \
+    if (_fault != md_fault_none)                \
+        DECLARE_FAULT(_fault);                \
+}
+DEFINST(SH,
+0x01, "sh", "s,S,b",
+WrPort, F_MEM|F_STORE|F_DISP,
+DNA, DNA,  DNA,
+DNA,
+DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SW_IMPL                        \
+{                                \
+    word_t _src;                        \
+    enum md_fault_type _fault;                \
+                                \
+    _src = WORD_MASK & (GPR(RS2));        \
+    WRITE_WORD(_src, (GPR(RS1) + SEXT(SIMM)),  _fault);    \
+    if (_fault != md_fault_none)                \
+        DECLARE_FAULT(_fault);                \
+}
+DEFINST(SW,
+0x02, "sw", "s,S,b",
+WrPort, F_MEM|F_STORE|F_DISP,
+DNA, DNA,  DNA,
+DNA,
+DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SD_IMPL                        \
+{                                \
+    qword_t _src;                        \
+    enum md_fault_type _fault;                \
+                                \
+    _src = (qword_t)(GPR(RS2));        \
+    WRITE_QWORD(_src, (GPR(RS1) + SEXT(SIMM)),  _fault);    \
+    if (_fault != md_fault_none)                \
+        DECLARE_FAULT(_fault);                \
+}
+DEFINST(SD,
+0x03, "sd", "s,S,b",
+WrPort, F_MEM|F_STORE|F_DISP,
+DNA, DNA,  DNA,
+DNA,
+DGPR(RS1), DGPR(RS2), DNA
+)
+
+
+CONNECT(INTIW_LINK)
+
+#define ADDIW_IMPL                        \
+{                                \
+    SET_GPR(RD, SEXT_TO((((GPR(RS1) & LOW_MASK) + (SEXT_TO(IMM, 12, 32))) & LOW_MASK), 32, 64));   \
+}
+DEFINST(ADDIW,
+0x00, "addiw", "d,s,i",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define SLLIW_IMPL                        \
+{                                \
+    SET_GPR(RD,  SEXT(WORD_MASK & (GPR(RS1) << (SHAMT_IW))));            \
+}
+DEFINST(SLLIW,
+0x01, "slliw", "d,s,H",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+DEFLINK(SHIFT_RIGHTW_I_LINK,
+0x05,"shift_rightw_i_link", 30, 0x03, NA)
+
+CONNECT(SHIFT_RIGHTW_I_LINK)
+
+#define SRLIW_IMPL                        \
+{                                \
+    SET_GPR(RD, SEXT((LOW_MASK & GPR(RS1)) >> (SHAMT_IW)));    \
+}
+DEFINST(SRLIW,
+0x00, "srliw", "d,s,H",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define SRAIW_IMPL                        \
+{                                                        \
+    SET_GPR(RD, SEXT((SEXT(LOW_MASK & GPR(RS1))) >> (SHAMT_IW)));    \
+}
+DEFINST(SRAIW,
+0x01, "sraiw", "d,s,H",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+CONNECT(INTI_LINK)
+#define ADDI_IMPL                        \
+{                                        \
+    SET_GPR(RD, GPR(RS1) + SEXT(IMM));   \
+}
+DEFINST(ADDI,
+0x00, "addi", "d,s,i",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define SLTI_IMPL                        \
+{                                \
+    SET_GPR(RD, (((sqword_t)GPR(RS1) < (sqword_t)SEXT(IMM)) ? 1: 0));        \
+}
+DEFINST(SLTI,
+0x02, "slti", "d,s,i",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define SLTIU_IMPL                                \
+{                                        \
+    SET_GPR(RD, (ext_unsigned_t)GPR(RS1) <(ext_unsigned_t)SEXT(IMM) ? 1: 0);    \
+}
+DEFINST(SLTIU,
+0x03, "sltiu", "d,s,i",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define XORI_IMPL                                \
+{                                        \
+    SET_GPR(RD, GPR(RS1) ^ SEXT(IMM));                    \
+}
+DEFINST(XORI,
+0x04, "xori", "d,s,i",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define ORI_IMPL                        \
+{                                \
+    SET_GPR(RD, GPR(RS1) | SEXT(IMM));            \
+}
+DEFINST(ORI,
+0x06, "ori", "d,s,i",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define ANDI_IMPL                        \
+{                                \
+    SET_GPR(RD, GPR(RS1) & SEXT(IMM));            \
+}
+DEFINST(ANDI,
+0x07, "andi", "d,s,i",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define SLLI_IMPL                        \
+{                                \
+    SET_GPR(RD, GPR(RS1) << (SHAMT_I));            \
+}
+DEFINST(SLLI,
+0x01, "slli", "d,s,i",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+DEFLINK(SHIFT_RIGHT_I_LINK,
+0x05,"shift_right_i_link", 30, 0x03, NA)
+
+CONNECT(SHIFT_RIGHT_I_LINK)
+
+#define SRLI_IMPL                        \
+{                                \
+    SET_GPR(RD, (ext_unsigned_t)GPR(RS1) >> (SHAMT_I));    \
+}
+DEFINST(SRLI,
+0x00, "srli", "d,s,i",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+#define SRAI_IMPL                        \
+{                                                        \
+    SET_GPR(RD, (ext_signed_t)GPR(RS1) >> (SHAMT_I));    \
+}
+DEFINST(SRAI,
+0x01, "srai", "d,s,i",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DNA, DNA
+)
+
+CONNECT(I_INTR_LINK_0)
+
+#define ADD_IMPL                                                \
+  {                                                            \
+    SET_GPR(RD, GPR(RS1) + GPR(RS2));                \
+  }
+DEFINST(ADD,
+0x00, "add", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SLL_IMPL                                                \
+{                                                            \
+    SET_GPR(RD, GPR(RS1) << (GPR(RS2) & SHIFT_MASK));            \
+}
+DEFINST(SLL,
+0x01, "sll", "d,s,i",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SLT_IMPL                                                \
+{                                                            \
+    if((sqword_t)GPR(RS1) < (sqword_t)GPR(RS2)) {                            \
+        SET_GPR(RD, 1);                                    \
+    } else {                                                \
+        SET_GPR(RD, 0);                                    \
+    }                                                    \
+}
+DEFINST(SLT,
+0x02, "slt", "d,s,i",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SLTU_IMPL                                            \
+{                                                            \
+    if((ext_unsigned_t)(GPR(RS1)) < (ext_unsigned_t)GPR(RS2)) {    \
+        SET_GPR(RD, 1);                                    \
+    } else {                                                \
+        SET_GPR(RD, 0);                                    \
+    }                                                    \
+                                                                \
+}
+DEFINST(SLTU,
+0x03, "sltu", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define XOR_IMPL                                                \
+{                                                            \
+    SET_GPR(RD, GPR(RS1) ^ GPR(RS2));                    \
+}
+DEFINST(XOR,
+0x04, "xor", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SRL_IMPL                                                    \
+{                                                                \
+    SET_GPR(RD, ((ext_unsigned_t)GPR(RS1)) >> ((GPR(RS2) & SHIFT_MASK)));    \
+}
+DEFINST(SRL,
+0x05, "srl", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define OR_IMPL                                           \
+{                                                         \
+    SET_GPR(RD, GPR(RS1) | GPR(RS2));                	  \
+}
+DEFINST(OR,
+0x06, "or", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+
+/* AND conflicts with GNU defs */
+#define AND_IMPL                                         \
+    {                                                    \
+        SET_GPR(RD, GPR(RS1) & GPR(RS2));                \
+    }
+DEFINST(AND,
+0x07,
+"and", "d,s,t",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+CONNECT(I_INTR_LINK_64)
+
+#define SUB_IMPL                                          \
+{                                                         \
+    SET_GPR(RD, GPR(RS1) - GPR(RS2));                     \
+}
+DEFINST(SUB,
+0x00, "sub", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SRA_IMPL                                        \
+{                                                       \
+    SET_GPR(RD, (ext_signed_t)GPR(RS1) >> (GPR(RS2) & SHIFT_MASK));\
+}
+DEFINST(SRA,
+0b101, "sra", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+CONNECT(I_INTRW_LINK_0)
+#define ADDW_IMPL                                              \
+  {                                                            \
+    SET_GPR(RD,  SEXT(WORD_MASK & (GPR(RS1) + GPR(RS2))));      \
+  }
+DEFINST(ADDW,
+0x00, "addw", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SLLW_IMPL                                            \
+{                                                            \
+    SET_GPR(RD, SEXT(WORD_MASK & (GPR(RS1) << (GPR(RS2) & SHIFTW_MASK)))); \
+}
+DEFINST(SLLW,
+0x01, "sllw", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SRLW_IMPL                                                    \
+{                                                                \
+    SET_GPR(RD, SEXT((WORD_MASK & (GPR(RS1)))>> ((GPR(RS2) & SHIFTW_MASK))));    \
+}
+DEFINST(SRLW,
+0x05, "srlw", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+CONNECT(I_INTRW_LINK_64)
+
+#define SUBW_IMPL                                                \
+{                                                            \
+    SET_GPR(RD, SEXT((WORD_MASK & (GPR(RS1)) - (WORD_MASK &GPR(RS2)))));                        \
+}
+DEFINST(SUBW,
+0x00, "subw", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+#define SRAW_IMPL                                        \
+{                                                       \
+    SET_GPR(RD, SEXT(SEXT(WORD_MASK & GPR(RS1)) >> (GPR(RS2) & SHIFTW_MASK)));\
+}
+DEFINST(SRAW,
+0b101, "sraw", "d,s,S",
+IntALU, F_ICOMP,
+DGPR(RD), DNA, DNA,
+        DNA, DGPR(RS1), DGPR(RS2), DNA
+)
+
+CONNECT(FENCE_LINK)
+#define FENCE_IMPL \
+{    \
+    /* implement as instruiction flag F_SYNC */                \
+}
+DEFINST(FENCE,
+0x00, "fence", "todo",
+NA, F_ATOMIC|F_SYNC,
+DNA, DNA, DNA,
+DNA,     DNA, DNA, DNA)
+
+// Zifencei 
+#define FENCE_I_IMPL \
+{    \
+     /* Fixme, not implement */\
+}
+DEFINST(FENCE_I,
+0x01, "fence.i", "todo",
+NA, F_ICOMP|F_IFLUSH,
+DNA, DNA, DNA,
+DNA, DNA, DNA, DNA
+)
+
+
+// Zicsr
+CONNECT(ENV_AND_CSR_LINK)
+DEFLINK(ENV_LINK,
+0x00, "env", 20, 0xfff, NA)
+
+#define CSRRW_IMPL \
+{    \
+    SYNC_FCSR(CSR, 0);    \
+	if (RD != 0/* not x0*/) {            \
+        qword_t tmp = CSRS(CSR);        \
+        SET_CSRS(CSR, GPR(RS1));        \
+        SYNC_FCSR(CSR, 1);   \
+        SET_GPR(RD, tmp);            \        
+    } else {    \
+        SET_CSRS(CSR, GPR(RS1));        \
+        SYNC_FCSR(CSR, 1);   \
+    }                        \
+}
+DEFINST(CSRRW,
+0x01, "csrrw", "todo",
+IntALU, F_ICOMP,
+DGPR(RD), DCSR(CSR), DNA,
+        DGPR(RS1), DCSR(CSR), DNA, DNA
+)
+
+#define CSRRS_IMPL \
+{    \
+    SYNC_FCSR(CSR, 0);   \
+    if (RS1 != 0/* not x0 */) {            \
+        word_t _rd =  CSRS(CSR);        \
+        SET_CSRS(CSR, GPR(RS1) | CSRS(CSR));    \ 
+        SYNC_FCSR(CSR, 1);   \       
+        SET_GPR(RD, _rd);        \
+    } else {                    \
+        SET_GPR(RD, CSRS(CSR));        \
+        SYNC_FCSR(CSR, 1);   \
+    }                        \
+}
+DEFINST(CSRRS,
+0x02, "csrrs", "todo",
+IntALU, F_ICOMP,
+DGPR(RD), DCSR(CSR), DNA,
+        DGPR(RS1), DCSR(CSR), DNA, DNA
+)
+
+#define CSRRC_IMPL \
+{    \
+    SYNC_FCSR(CSR, 0);   \
+    if (RS1 != 0/* not x0*/) {            \
+        word_t _rd =  CSRS(CSR);        \
+        SET_CSRS(CSR, (~GPR(RS1))& CSRS(CSR));    \
+        SYNC_FCSR(CSR, 1);   \
+        SET_GPR(RD, _rd);        \
+    } else {                    \
+        SET_GPR(RD, CSRS(CSR));        \
+        SYNC_FCSR(CSR, 1);   \
+    }                        \
+}
+DEFINST(CSRRC,
+0x03, "csrrc", "todo",
+IntALU, F_ICOMP,
+DGPR(RD), DCSR(CSR), DNA,
+        DGPR(RS1), DCSR(CSR), DNA, DNA
+)
+
+#define CSRRWI_IMPL \
+{    \
+    SYNC_FCSR(CSR, 0);   \
+    if (RD != 0/* not x0*/) {            \
+        qword_t tmp = CSRS(CSR);        \
+        SET_CSRS(CSR, EXT(UIMM4));        \
+        SYNC_FCSR(CSR, 1);   \
+        SET_GPR(RD, tmp);            \
+    } else {                    \
+        SET_CSRS(CSR, EXT(UIMM4));        \
+        SYNC_FCSR(CSR, 1);   \
+    }                        \
+}
+DEFINST(CSRRWI,
+0x05, "csrrwi", "todo",
+IntALU, F_ICOMP,
+DGPR(RD), DCSR(CSR), DNA,
+        DNA, DCSR(CSR), DNA, DNA
+)
+
+#define CSRRSI_IMPL \
+{    \
+    SYNC_FCSR(CSR, 0);   \
+    word_t _rd =  CSRS(CSR);        \
+    if (UIMM4 != 0/* not x0*/) {            \
+        SET_CSRS(CSR, UIMM4 | CSRS(CSR));    \
+        SYNC_FCSR(CSR, 1);   \
+    }                        \
+    SET_GPR(RD, _rd);        \
+}
+DEFINST(CSRRSI,
+0x06, "csrrsi", "todo",
+IntALU, F_ICOMP,
+DGPR(RD), DCSR(CSR), DNA,
+        DNA, DCSR(CSR), DNA, DNA
+)
+
+#define CSRRCI_IMPL \
+{    \
+    SYNC_FCSR(CSR, 0);   \
+    word_t _rd =  CSRS(CSR);        \
+    if (UIMM4 != 0/* not x0*/) {            \
+        SET_CSRS(CSR, (~UIMM4)& CSRS(CSR));    \
+        SYNC_FCSR(CSR, 1);   \
+    }                        \
+    SET_GPR(RD, _rd);        \
+}
+DEFINST(CSRRCI,
+0x07, "csrrci", "todo",
+IntALU, F_ICOMP,
+DGPR(RD), DCSR(CSR), DNA,
+        DNA, DCSR(CSR), DNA, DNA
+)
+
+
+CONNECT(ENV_LINK)
+#define ECALL_IMPL \
+{    \
+    SYSCALL(inst);\
+}
+DEFINST(ECALL,
+0x00, "ecall", "todo",
+NA, F_TRAP,
+DNA, DNA, DNA,
+DNA,     DNA, DNA, DNA)
+
+#define EBREAK_IMPL \
+{    \
+    SYSCALL(93);\
+}
+DEFINST(EBREAK,
+0x01, "ebreak", "todo",
+NA, F_TRAP,
+DNA, DNA, DNA,
+DNA,     DNA, DNA, DNA)
+
+#define SRET_IMPL \
+{    \
+    /* step1. clear SIE bit filde and also set SPP to 00 of mstatus*/    \
+    /* Since simplescalar is User-level simulator, 00 represents the least privileged mode */  \
+    qword_t mstatus = (CSRS(MSTATUS) & ~(SIE | SPP));    \
+    /* step2. set MPIE to MIE bit field */  \
+    if(mstatus & SPIE) \
+        mstatus |= SIE; \
+    /* step3. MPIE bit file of mstatus set to 1 */  \
+    mstatus |= SPIE;   \
+    \
+    /* update mstatus */    \
+    SET_CSRS(MSTATUS, mstatus); \
+    /* step4. set next pc as SEPC */  \
+    SET_NPC(CSRS(SEPC)); \
+}
+DEFINST(SRET,
+0x102, "sret", "todo",
+NA, F_TRAP,
+DNA, DNA, DNA,
+DNA,     DNA, DNA, DNA)
+
+#define MRET_IMPL \
+{    \
+    /* step1. clear MIE bit filed and also set MPP to 00 of mstatus*/    \
+    /* Since simplescalar is User-level simulator, 00 represents the least privileged mode */  \
+    qword_t mstatus = (CSRS(MSTATUS) & ~(MIE | MPP));    \
+    /* step2. set MPIE to MIE bit field */  \
+    if(mstatus & MPIE) \
+        mstatus |= MIE; \
+    /* step3. MPIE bit file of mstatus set to 1 */  \
+    mstatus |= MPIE;   \
+    \
+    /* update mstatus */    \
+    SET_CSRS(MSTATUS, mstatus); \
+    /* step4. set next pc as MEPC */  \
+    SET_NPC(CSRS(MEPC)); \
+}
+DEFINST(MRET,
+0x302, "mret", "todo",
+NA, F_TRAP,
+DNA, DNA, DNA,
+DNA,     DNA, DNA, DNA)
+
+#ifdef RV64M
+CONNECT(RV64MW_LINK)
+#define MULW_IMPL \
+{	\
+    SET_GPR(RD, SEXT(WORD_MASK & ((WORD_MASK & GPR(RS1)) * (WORD_MASK & GPR(RS2)) )));\
+}
+DEFINST(MULW, 0x00, "mulw", "d,s,S",
+    IntMULT, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+#define DIVW_IMPL \
+{							\
+    /*if( (WORD_MASK& (GPR(RS2))) == 0) { DECLARE_FAULT(md_fault_div0);}*/  \
+    int undefined_signal = 0;  \
+    sword_t _rs1 = WORD_MASK &( GPR(RS1) );			\
+    sword_t _rs2 = WORD_MASK &( GPR(RS2) );			\
+    if(_rs2 == 0)   \
+        undefined_signal = 1;   \
+    if(_rs1 == INT32_MIN) \
+        undefined_signal = 2;    \
+    if(_rs1 == INT32_MIN && _rs2 == -1) \
+        undefined_signal = 3;    \
+    if(_rs1 == INT32_MIN && _rs2 == INT32_MAX) \
+        undefined_signal = 4;    \
+    if(_rs1 == INT32_MIN && _rs2 == 0) \
+        undefined_signal = 5;    \
+    switch(undefined_signal) {  \
+        case 1: SET_GPR(RD, -1); break; \
+        case 2: SET_GPR(RD, SEXT(INT32_MIN)); break;  \
+        case 3: SET_GPR(RD, SEXT(INT32_MIN)); break;  \
+        case 4: SET_GPR(RD, SEXT(INT32_MIN)); break;  \
+        case 5: SET_GPR(RD, -1); break; \
+        default:    \
+            SET_GPR(RD, SEXT((sqword_t)(_rs1/_rs2))); \
+            break;  \
+    }   \
+}
+DEFINST(DIVW, 0x04, "divw", "todo",
+    IntDIV, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+#define DIVUW_IMPL \
+{	\
+    /*if(GPR(RS2) == 0) { DECLARE_FAULT(md_fault_div0); }*/			\
+    int undefined_signal = 0;  \
+    word_t _rs1 = WORD_MASK & (GPR(RS1));			\
+    word_t _rs2 =  WORD_MASK & (GPR(RS2));			\
+    if(_rs2 == 0)   \
+        undefined_signal = 1;   \
+    if(_rs1 == UINT64_MIN)   \
+        undefined_signal = 2;   \
+    if(_rs1 == UINT64_MIN && _rs2 == -1) \
+        undefined_signal = 3;    \
+        if(_rs1 == UINT64_MIN && _rs2 == 0) \
+        undefined_signal = 4;    \
+    switch(undefined_signal) {  \
+        case 1: SET_GPR(RD, -1); break; \
+        case 2: SET_GPR(RD, UINT64_MIN); break;  \
+        case 3: SET_GPR(RD, 0); break;  \
+        case 4: SET_GPR(RD, -1); break;  \
+        default:    \
+            SET_GPR(RD, SEXT(_rs1/_rs2)); \
+            break;  \
+    }   \
+}
+DEFINST(DIVUW, 0x05, "divuw", "todo",
+    IntDIV, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+#define REMW_IMPL \
+{	\
+   /*if(GPR(RS2) & WORD_MASK == 0) { DECLARE_FAULT(md_fault_div0); }*/			\
+    int undefined_signal = 0;  \
+    sword_t _rs1 = GPR(RS1) & WORD_MASK;			\
+    sword_t _rs2 = GPR(RS2) & WORD_MASK;			\
+    if(_rs2 == 0)   \
+        undefined_signal = 1;   \
+    if( _rs2 == -1) \
+        undefined_signal = 2;    \
+    switch(undefined_signal) {  \
+        case 1: SET_GPR(RD, SEXT((sqword_t)_rs1));; break; \
+        case 2: SET_GPR(RD, 0); break;  \
+        default:    \
+            SET_GPR(RD, SEXT((sqword_t)( _rs1 % _rs2)));				\
+            break;  \
+    }   \
+}
+DEFINST(REMW, 0x06, "remw", "todo",
+    IntDIV, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+#define REMUW_IMPL \
+{	\
+    /*if(WORD_MASK & GPR(RS2) == 0) { DECLARE_FAULT(md_fault_div0); }*/			\
+    int undefined_signal = 0;  \
+    word_t _rs1 = GPR(RS1) & WORD_MASK;			\
+    word_t _rs2 = GPR(RS2) & WORD_MASK;			\
+    if(_rs2 == 0)   \
+        undefined_signal = 1;   \
+    switch(undefined_signal) {  \
+        case 1: SET_GPR(RD, SEXT((sqword_t )_rs1)); break; \
+        default:    \
+            SET_GPR(RD, SEXT((sqword_t )(_rs1 % _rs2)));    \
+            break;  \
+    }   \
+}
+DEFINST(REMUW, 0x07, "remuw", "todo",
+    IntDIV, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+CONNECT(RV64M_LINK)
+#define MUL_IMPL \
+{	\
+    SET_GPR(RD, (GPR(RS1) * GPR(RS2) ));\
+}
+DEFINST(MUL, 0x00, "mul", "todo",
+    IntMULT, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+#define MULH_IMPL \
+{ /*signed unsigned?*/ \
+    ext_signed_t _rs1 = GPR(RS1);   \
+    ext_signed_t _rs2 = GPR(RS2);   \
+    ext_signed_t _result; \
+    ext_signed_t _h_1, _l_1, _h_2, _l_2; \
+    ext_signed_t _low_res, _high_res, _h_l_res, _l_h_res; \
+    ext_signed_t _mid, _mid2; \
+    ext_signed_t _carry_mid = 0; \
+ \
+    /* Split high and low parts */ \
+    _h_1 = _rs1 >> (XLEN / 2); \
+    _l_1 = _rs1 & LOW_MASK; \
+    _h_2 = _rs2 >> (XLEN / 2); \
+    _l_2 = _rs2 & LOW_MASK; \
+ \
+    /* Perform partial multiplications */ \
+    _high_res = _h_1 * _h_2; \
+    _low_res = _l_1 * _l_2; \
+    _h_l_res = _h_1 * _l_2; \
+    _l_h_res = _l_1 * _h_2; \
+ \
+    /* Combine middle terms */ \
+    _mid = _h_l_res + _l_h_res; \
+    if (_mid < _h_l_res || _mid < _l_h_res) \
+        _carry_mid++; \
+    _mid2 = _mid + (_low_res >> (XLEN / 2)); \
+    if (_mid2 < _mid) \
+        _carry_mid++; \
+ \
+    /* Combine results */ \
+    _result = _high_res + (_carry_mid << (XLEN / 2)) + ((_mid2 >> (XLEN / 2)) & LOW_MASK); \
+ \
+    /* Handle signed multiplication */ \
+    SET_GPR(RD, _result & LOW_MASK); \
+}
+
+
+DEFINST(MULH, 0x01, "mulh", "todo",
+    IntMULT, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+/*signed * unsigned */
+#define MULHSU_IMPL \
+{ \
+    ext_signed_t _rs1 = GPR(RS1); /* Signed operand */ \
+    ext_unsigned_t _rs2 = GPR(RS2); /* Unsigned operand */ \
+    ext_signed_t _result; \
+    ext_signed_t _h_1, _l_1; \
+    ext_unsigned_t _h_2, _l_2; \
+    ext_signed_t _high_res, _h_l_res; \
+    ext_unsigned_t _low_res, _l_h_res; \
+    ext_signed_t _mid; \
+    ext_unsigned_t _carry_mid = 0; \
+ \
+    /* Split high and low parts */ \
+    _h_1 = (_rs1 >> (XLEN / 2)); \
+    _l_1 = _rs1 & LOW_MASK; \
+    _h_2 = (_rs2 >> (XLEN / 2)); \
+    _l_2 = _rs2 & LOW_MASK; \
+ \
+    /* Perform partial multiplications */ \
+    _high_res = _h_1 * _h_2; /* High part */ \
+    _low_res = _l_1 * _l_2; /* Low part */ \
+    _h_l_res = _h_1 * _l_2; /* Cross product 1 */ \
+    _l_h_res = _l_1 * _h_2; /* Cross product 2 */ \
+ \
+    /* Combine middle terms */ \
+    _mid = _h_l_res + _l_h_res; \
+    if (_mid < _h_l_res) \
+        _carry_mid++; \
+    _mid += (_low_res >> (XLEN / 2)); \
+    if (_mid < (_low_res >> (XLEN / 2))) \
+        _carry_mid++; \
+ \
+    /* Combine results */ \
+    _result = _high_res + (_carry_mid << (XLEN / 2)) + (_mid >> (XLEN / 2)); \
+ \
+    /* Handle signed multiplication */ \
+    SET_GPR(RD, _result); \
+}
+
+DEFINST(MULHSU, 0x02, "mulhsu", "todo",
+    IntMULT, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+/* unsigned multiply unsigned */
+#define MULHU_IMPL \
+{ /*signed unsigned?*/ \
+    ext_unsigned_t _rs1 = GPR(RS1);   \
+    ext_unsigned_t _rs2 = GPR(RS2);   \
+    ext_unsigned_t _result; \
+    ext_unsigned_t _h_1, _l_1, _h_2, _l_2; \
+    ext_unsigned_t _low_res, _high_res, _h_l_res, _l_h_res; \
+    ext_unsigned_t _mid, _mid2; \
+    ext_unsigned_t _carry_mid = 0; \
+ \
+    /* Split high and low parts */ \
+    _h_1 = _rs1 >> (XLEN / 2); \
+    _l_1 = _rs1 & LOW_MASK; \
+    _h_2 = _rs2 >> (XLEN / 2); \
+    _l_2 = _rs2 & LOW_MASK; \
+ \
+    /* Perform partial multiplications */ \
+    _high_res = _h_1 * _h_2; \
+    _low_res = _l_1 * _l_2; \
+    _h_l_res = _h_1 * _l_2; \
+    _l_h_res = _l_1 * _h_2; \
+ \
+    /* Combine middle terms */ \
+    _mid = _h_l_res + _l_h_res; \
+    if (_mid < _h_l_res || _mid < _l_h_res) \
+        _carry_mid++; \
+    _mid2 = _mid + (_low_res >> (XLEN / 2)); \
+    if (_mid2 < _mid) \
+        _carry_mid++; \
+ \
+    /* Combine results */ \
+    _result = _high_res + (_carry_mid << (XLEN / 2)) + ((_mid2 >> (XLEN / 2)) & LOW_MASK); \
+ \
+    /* Handle signed multiplication */ \
+    SET_GPR(RD, _result); \
+}
+
+DEFINST(MULHU, 0x03, "mulhu", "todo",
+    IntMULT, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+#define DIV_IMPL \
+{							\
+    /*if(GPR(RS2) == 0) { DECLARE_FAULT(md_fault_div0); }*/			\
+    int undefined_signal = 0;  \
+    ext_signed_t _rs1 = GPR(RS1);			\
+    ext_signed_t _rs2 = GPR(RS2);			\
+    if(_rs2 == 0)   \
+        undefined_signal = 1;   \
+    if(_rs1 == UINT64_MIN && _rs2 == -1) \
+        undefined_signal = 2;    \
+    switch(undefined_signal) {  \
+        case 1: SET_GPR(RD, -1); break; \
+        case 2: SET_GPR(RD, UINT64_MIN); break;  \
+        default:    \
+            SET_GPR(RD, _rs1/_rs2); \
+            break;  \
+    }   \
+}
+DEFINST(DIV, 0x04, "div", "todo",
+    IntDIV, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+#define DIVU_IMPL \
+{	\
+    /*if(GPR(RS2) == 0) { DECLARE_FAULT(md_fault_div0); }*/			\
+    int undefined_signal = 0;  \
+    ext_unsigned_t _rs1 = GPR(RS1);			\
+    ext_unsigned_t _rs2 = GPR(RS2);			\
+    if(_rs2 == 0)   \
+        undefined_signal = 1;   \
+    if(_rs1 == UINT64_MIN)   \
+        undefined_signal = 2;   \
+    if(_rs1 == UINT64_MIN && _rs2 == -1) \
+        undefined_signal = 3;    \
+        if(_rs1 == UINT64_MIN && _rs2 == 0) \
+        undefined_signal = 4;    \
+    switch(undefined_signal) {  \
+        case 1: SET_GPR(RD, -1); break; \
+        case 2: SET_GPR(RD, UINT64_MIN); break;  \
+        case 3: SET_GPR(RD, 0); break;  \
+        case 4: SET_GPR(RD, -1); break;  \
+        default:    \
+            SET_GPR(RD, _rs1/_rs2); \
+            break;  \
+    }   \
+}
+DEFINST(DIVU, 0x05, "divu", "todo",
+    IntDIV, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+#define REM_IMPL \
+{	\
+   /*if(GPR(RS2) == 0) { DECLARE_FAULT(md_fault_div0); }*/			\
+    int undefined_signal = 0;  \
+    ext_signed_t _rs1 = GPR(RS1);			\
+    ext_signed_t _rs2 = GPR(RS2);			\
+    if(_rs2 == 0)   \
+        undefined_signal = 1;   \
+    if( _rs2 == -1) \
+        undefined_signal = 2;    \
+    switch(undefined_signal) {  \
+        case 1: SET_GPR(RD, _rs1); break; \
+        case 2: SET_GPR(RD, 0); break;  \
+        default:    \
+            SET_GPR(RD, _rs1 % _rs2); \
+            break;  \
+    }   \
+}
+DEFINST(REM, 0x06, "rem", "todo",
+    IntDIV, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+#define REMU_IMPL \
+{	\
+       /*if(GPR(RS2) == 0) { DECLARE_FAULT(md_fault_div0); }*/			\
+    int undefined_signal = 0;  \
+    ext_unsigned_t _rs1 = GPR(RS1);			\
+    ext_unsigned_t _rs2 = GPR(RS2);			\
+    if(_rs2 == 0)   \
+        undefined_signal = 1;   \
+    switch(undefined_signal) {  \
+        case 1: SET_GPR(RD, _rs1); break; \
+        default:    \
+            SET_GPR(RD, _rs1 % _rs2); \
+            break;  \
+    }   \
+}
+DEFINST(REMU, 0x07, "remu", "todo",
+    IntDIV, F_ICOMP|F_LONGLAT/*FIXME Should use F_LONGLAT?*/,
+    DGPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DGPR(RS2), DNA)
+
+#endif // RV64M
+
+#ifdef RV64A
+CONNECT(A_EXTENSION_LINK)
+
+DEFLINK(RVA_W_LINK, 0b010, "rva_w_link", 27, FUNCT5_MASK, NA)
+DEFLINK(RVA_D_LINK, 0b011, "rva_d_link", 27, FUNCT5_MASK, NA)
+
+
+CONNECT(RVA_W_LINK)
+
+#define LR_W_IMPL {\
+    /*FIXME: not implement fully*/ \
+    /*DO_AQ_RL(AQ, RL);*/\
+    sword_t _result;					\
+    enum md_fault_type _fault;				\
+    _result = READ_WORD((GPR(RS1)), _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, SEXT(_result));	\
+    /* setting recorder */ \
+    lrsc->target_addr = (GPR(RS1)); \
+    lrsc->val = _result;    \
+}
+DEFINST(LR_W, 0x02, "lr.w", "todo",
+    RdPort, F_MEM|F_LOAD|F_DISP|F_ATOMIC,
+    DGPR(RD), DNA, DNA,
+    DNA, DGPR(RS1),  DNA, DNA)
+
+#define SC_W_IMPL {						\
+    /*FIXME not implement fully*/				\
+    /*DO_AQ_RL(AQ, RL);*/\    
+    word_t _src;						\
+    word_t _target_val; \
+    enum md_fault_type _fault;				\
+                                \
+    _src = WORD_MASK & (GPR(RS2));		\
+    _target_val = READ_WORD((GPR(RS1)),  _fault);			\
+    if(((GPR(RS1)) == lrsc->target_addr) && (_target_val == lrsc->val)) {    \
+        WRITE_WORD(_src, (GPR(RS1)),  _fault);			\
+        if (_fault != md_fault_none)				\
+            DECLARE_FAULT(_fault);				\
+        SET_GPR(RD, 0);						\
+    }   \
+    else{  \
+        SET_GPR(RD, 1);						\
+    }   \
+    lrsc_init(lrsc);    \
+}
+DEFINST(SC_W, 0x03, "sc.w", "todo",
+    WrPort, F_MEM|F_STORE|F_DISP|F_ATOMIC,
+    DNA, DNA,  DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+
+#define AMOSWAP_W_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sword_t _rs1_v;						\
+    word_t _rs1 = GPR(RS1);				\
+    sword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_WORD(_rs1, _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    WRITE_WORD(_rs2, _rs1,  _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, SEXT((ext_signed_t)_rs1_v));				\
+}
+DEFINST(AMOSWAP_W, 0x01, "amoswap.w", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DNA, DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+
+#define AMOADD_W_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sword_t _rs1_v;					\
+    sword_t _rs1 = GPR(RS1);				\
+    sword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_WORD(GPR(RS1), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    WRITE_WORD(_rs1_v + _rs2, GPR(RS1),  _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, SEXT((ext_signed_t)_rs1_v));	\
+}
+DEFINST(AMOADD_W, 0x00, "amoadd.w", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+
+#define AMOXOR_W_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sword_t _rs1_v;					\
+    sword_t _rs1 = GPR(RS1);				\
+    sword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_WORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    WRITE_WORD(_rs1_v ^ _rs2, GPR(RS1),  _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, SEXT((ext_signed_t)_rs1_v));	\
+}
+DEFINST(AMOXOR_W, 0x04, "amoxor.w", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+
+
+#define AMOAND_W_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sword_t _rs1_v;					\
+    sword_t _rs1 = GPR(RS1);				\
+    sword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_WORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    WRITE_WORD(_rs1_v & _rs2, _rs1,  _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, SEXT((ext_signed_t)_rs1_v));	\
+}
+DEFINST(AMOAND_W, 0x0c, "amoand.w", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DGPR(RS1),    DGPR(RS2), DNA, DNA)
+
+#define AMOOR_W_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sword_t _rs1_v;					\
+    sword_t _rs1 = GPR(RS1);				\
+    sword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_WORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    WRITE_WORD(_rs1_v | _rs2, GPR(RS1),  _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, SEXT((ext_signed_t)_rs1_v));	\
+}
+DEFINST(AMOOR_W, 0x08, "amoor.w", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DGPR(RS1),    DGPR(RS2), DNA, DNA)
+
+#define AMOMIN_W_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sword_t _rs1_v;					\
+    sword_t _rs1 = GPR(RS1);				\
+    sword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_WORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    if(_rs2 < _rs1_v)\
+    WRITE_WORD(_rs2, GPR(RS1),  _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, SEXT((ext_signed_t)_rs1_v));	\
+}
+DEFINST(AMOMIN_W, 0x10, "amomin.w", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+#define AMOMAX_W_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sword_t _rs1_v;						\
+    sword_t _rs1 = GPR(RS1);				\
+    sword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_WORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    if(_rs2 > _rs1_v)					\
+      WRITE_WORD(_rs2, GPR(RS1),  _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, SEXT((ext_signed_t)_rs1_v));				\
+}
+DEFINST(AMOMAX_W, 0x14, "amomax.w", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+#define AMOMINU_W_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    word_t _rs1_v;						\
+    word_t _rs1 = GPR(RS1);				\
+    word_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_WORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    if(_rs2 < _rs1_v)					\
+      WRITE_WORD(_rs2, _rs1,  _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, SEXT((ext_signed_t)_rs1_v));				\
+}
+DEFINST(AMOMINU_W, 0x18, "amominu.w", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+
+#define AMOMAXU_W_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    word_t _rs1_v;						\
+    word_t _rs1 = GPR(RS1);				\
+    word_t _rs2 = GPR(RS2);				\
+    _rs1_v = (READ_WORD((GPR(RS1)), _fault));			\
+    _rs1_v = SEXT(_rs1_v);  \    
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    if((ext_unsigned_t)_rs2 > (ext_unsigned_t)_rs1_v)					\
+      WRITE_WORD(_rs2, GPR(RS1),  _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, SEXT((ext_signed_t)_rs1_v));				\
+}
+
+DEFINST(AMOMAXU_W, 0x1c, "amomaxu.w", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+
+CONNECT(RVA_D_LINK)
+
+#define LR_D_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    /*FIXME not implement fully*/\
+    sqword_t _result;					\
+    enum md_fault_type _fault;				\
+    _result = READ_QWORD((GPR(RS1)), _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, _result);	\
+    /* setting recorder */ \
+    lrsc->target_addr = (GPR(RS1)); \
+    lrsc->val = _result;    \
+}
+DEFINST(LR_D, 0x02, "lr.d", "todo",
+    RdPort, F_MEM|F_LOAD|F_DISP|F_ATOMIC,
+    DGPR(RD), DNA, DNA,
+    DNA, DGPR(RS1),    DNA, DNA)
+
+#define SC_D_IMPL {						\
+    /*FIXME not implement fully*/				\
+    /*DO_AQ_RL(AQ, RL);\
+    qword_t _src;						\
+    enum md_fault_type _fault;				\
+    _src = GPR(RS2);		\
+    WRITE_QWORD(_src, (GPR(RS1)),  _fault);			\
+    if (_fault != md_fault_none)				\
+        DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, 0);						\
+    */\
+    /*FIXME not implement fully*/				\
+    /*DO_AQ_RL(AQ, RL);*/   \    
+    qword_t _src;						\
+    qword_t _target_val; \
+    enum md_fault_type _fault;				\
+                                \
+    _src = WORD_MASK & (GPR(RS2));		\
+    _target_val = READ_QWORD((GPR(RS1)),  _fault);			\
+    if(((GPR(RS1)) == lrsc->target_addr) && (_target_val == lrsc->val)) {    \
+        WRITE_QWORD(_src, (GPR(RS1)),  _fault);			\
+        if (_fault != md_fault_none)				\
+            DECLARE_FAULT(_fault);				\
+        SET_GPR(RD, 0);						\
+    }   \
+    else{  \
+        SET_GPR(RD, 1);						\
+    }   \
+    lrsc_init(lrsc);    \
+}
+DEFINST(SC_D, 0x03, "sc.d", "todo",
+    WrPort, F_MEM|F_STORE|F_DISP|F_ATOMIC,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+#define AMOSWAP_D_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sqword_t _rs1_v;						\
+    sqword_t _rs1 = GPR(RS1);				\
+    sqword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_QWORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    WRITE_QWORD(_rs2, _rs1,  _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, _rs1_v);				\
+}
+DEFINST(AMOSWAP_D, 0x01, "amoswap.d", "d,s,S",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+     DGPR(RS1), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+#define AMOADD_D_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sqword_t _rs1_v;					\
+    sqword_t _rs1 = GPR(RS1);				\
+    sqword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_QWORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    WRITE_QWORD(_rs1_v + _rs2, _rs1,  _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, _rs1_v);	\
+}
+DEFINST(AMOADD_D, 0x00, "amoadd.d", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+#define AMOXOR_D_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sqword_t _rs1_v;					\
+    sqword_t _rs1 = GPR(RS1);				\
+    sqword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_QWORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    WRITE_QWORD(_rs1_v ^ _rs2, _rs1,  _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, _rs1_v);	\
+}
+DEFINST(AMOXOR_D, 0x04, "amoxor.d", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+#define AMOAND_D_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sqword_t _rs1_v;					\
+    sqword_t _rs1 = GPR(RS1);				\
+    sqword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_QWORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    WRITE_QWORD(_rs1_v & _rs2, _rs1,  _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, _rs1_v);	\
+}
+DEFINST(AMOAND_D, 0x0c, "amoand.d", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+#define AMOOR_D_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sqword_t _rs1_v;					\
+    sqword_t _rs1 = GPR(RS1);				\
+    sqword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_QWORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    WRITE_QWORD(_rs1_v | _rs2, _rs1,  _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, _rs1_v);	\
+}
+DEFINST(AMOOR_D, 0x08, "amoor.d", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+#define AMOMIN_D_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sqword_t _rs1_v;					\
+    sqword_t _rs1 = GPR(RS1);				\
+    sqword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_QWORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    if(_rs2 < _rs1_v)\
+    WRITE_QWORD(_rs2, _rs1,  _fault);		\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, _rs1_v);	\
+}
+DEFINST(AMOMIN_D, 0x10, "amomin.d", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+#define AMOMAX_D_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    sqword_t _rs1_v;						\
+    sqword_t _rs1 = GPR(RS1);				\
+    sqword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_QWORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    if(_rs2 > _rs1_v)					\
+      WRITE_QWORD(_rs2, _rs1,  _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, _rs1_v);				\
+}
+DEFINST(AMOMAX_D, 0x14, "amomax.d", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+#define AMOMINU_D_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    qword_t _rs1_v;						\
+    qword_t _rs1 = GPR(RS1);				\
+    qword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_QWORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    if(_rs2 < _rs1_v)					\
+      WRITE_QWORD(_rs2, _rs1,  _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, _rs1_v);				\
+}
+DEFINST(AMOMINU_D, 0x18, "amominu.d", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+    
+#define AMOMAXU_D_IMPL {\
+    DO_AQ_RL(AQ, RL);\
+    enum md_fault_type _fault;				\
+    qword_t _rs1_v;						\
+    qword_t _rs1 = GPR(RS1);				\
+    qword_t _rs2 = GPR(RS2);				\
+    _rs1_v = READ_QWORD((GPR(RS1)), _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    if(_rs2 > _rs1_v)					\
+      WRITE_QWORD(_rs2, _rs1,  _fault);			\
+    if (_fault != md_fault_none) 				\
+          DECLARE_FAULT(_fault);				\
+    SET_GPR(RD, _rs1_v);				\
+}
+DEFINST(AMOMAXU_D, 0x1c, "amomaxu.d", "todo",
+    AMOPort, F_MEM|F_STORE|F_DISP|F_ATOMIC|F_AMO,
+    DGPR(RD), DNA, DNA,
+    DNA,  DGPR(RS1),     DGPR(RS2), DNA)
+
+#endif //RV64A
+
+#ifdef RV64F
+CONNECT(FL_LINK)
+#define FLW_IMPL {						\
+    qword_t _result;						\
+    enum md_fault_type _fault;				\
+    _result = READ_WORD(GPR(RS1) + SEXT(IMM), _fault);	\
+    if (_fault != md_fault_none)				\
+        DECLARE_FAULT(_fault);				\
+    /*printf("FLW: Loading value 0x%08x from address 0x%08x\n", _result, GPR(RS1) + SEXT(IMM));*/ \
+    SET_FPRD_Q(RD, _result | NAN_BOX);					\
+}
+DEFINST(FLW, 0x02, "flw", "todo",
+    RdPort, F_MEM|F_LOAD|F_DISP,
+    DFPR(RD), DNA,  DNA,
+    DNA,    DGPR(RS1), DNA, DNA)
+
+#ifdef RV64D
+#define FLD_IMPL {\
+    sqword_t _result;						\
+    enum md_fault_type _fault;				\
+                                \
+    _result = READ_QWORD(GPR(RS1) + SEXT(IMM), _fault);	\
+    if (_fault != md_fault_none)				\
+        DECLARE_FAULT(_fault);				\
+    SET_FPRD_Q(RD, _result);		/*check*/		\
+}
+
+DEFINST(FLD, 0x03, "fld", "todo",
+    RdPort, F_MEM|F_LOAD|F_DISP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DGPR(RS1), DNA, DNA)
+#endif //RV64D
+
+CONNECT(FS_LINK)
+
+#define FSW_IMPL { \
+    /* need NAN Boxing check? maybe not*/   \
+    sword_t _data = FPR_W(RS2); \
+    enum md_fault_type _fault; \
+    md_addr_t _addr = GPR(RS1) + SEXT(SIMM);		\
+    WRITE_WORD((FPR_W(RS2)), _addr, _fault);			\
+    if (_fault != md_fault_none) \
+        DECLARE_FAULT(_fault); \
+}
+
+DEFINST(FSW, 0x02, "fsw", "todo",
+    WrPort, F_MEM|F_STORE|F_DISP,
+    DNA, DNA, DNA,
+    DNA,     DGPR(RS1), DFPR(RS2), DNA)
+
+#ifdef RV64D
+#define FSD_IMPL {\
+                                \
+    enum md_fault_type _fault;				\
+    md_addr_t _addr = GPR(RS1) + SEXT(SIMM);		\
+    WRITE_QWORD(FPRD_Q(RS2), _addr, _fault);		\
+    if (_fault != md_fault_none)				\
+        DECLARE_FAULT(_fault);				\
+}
+DEFINST(FSD, 0x03, "fsd", "todo",
+    WrPort, F_MEM|F_STORE|F_DISP,
+    DNA, DNA, DNA,
+    DNA,    DGPR(RS1), DFPR(RS2), DNA)
+#endif //RV64D
+
+CONNECT(FMADD_LINK)
+
+#define FMADD_S_IMPL {						\
+    qword_t fflags = 0;    \
+    w2f_t result; result.w = 0;  \
+    w2f_t rs1, rs2, rs3;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    rs3.w = NAN_BOXED_CHECK(RS3);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, MADD_OPE, (FPR(RS1)*FPR(RS2)+FPR(RS3)), rs1.f, rs2.f, rs3.f, result.w);   \
+    if(fflags & NV) \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    else {   \
+        result.f = FPR(RS1) * FPR(RS2) + FPR(RS3);  \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);		\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FMADD_S, 0x00, "fmadd.s", "todo",
+    FloatMULT_ACC, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DFPR(RS1), DFPR(RS2), DFPR(RS3), DNA)
+
+#ifdef RV64D
+#define FMADD_D_IMPL {						\
+    qword_t fflags = 0;    \
+    qword_t result = 0;  \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, MADD_OPE, (FPRD(RS1)*FPRD(RS2)+FPRD(RS3)), FPRD(RS1), FPRD(RS2), FPRD(RS3), result);   \
+    if(fflags & NV) \
+        SET_FPRD(RD, result);			\
+    else    \
+         SET_FPRD(RD, FPRD(RS1) * FPRD(RS2) + FPRD(RS3));		\
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FMADD_D, 0x01, "fmadd.d", "todo",
+    FloatMULT_ACC, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DFPR(RS1), DFPR(RS2), DFPR(RS3), DNA)
+#endif //RV64D
+
+CONNECT(FMSUB_LINK)
+#define FMSUB_S_IMPL {						\
+    qword_t fflags = 0;    \
+    w2f_t result; result.w = 0;  \
+    w2f_t rs1, rs2, rs3;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    rs3.w = NAN_BOXED_CHECK(RS3);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, MSUB_OPE, (FPR(RS1)*FPR(RS2)-FPR(RS3)), rs1.f, rs2.f, rs3.f, result.w);   \
+    if(fflags & NV) \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    else {   \
+        result.f = FPR(RS1) * FPR(RS2) - FPR(RS3);  \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);		\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FMSUB_S, 0x00, "fmsub.s", "todo",
+    FloatMULT_ACC, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DFPR(RS1), DFPR(RS2), DFPR(RS3), DNA)
+
+#ifdef RV64D
+#define FMSUB_D_IMPL {\
+    qword_t fflags = 0;    \
+    qword_t result = 0;  \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, MSUB_OPE, (FPRD(RS1)*FPRD(RS2)-FPRD(RS3)), FPRD(RS1), FPRD(RS2), FPRD(RS3), result);   \
+    if(fflags & NV) \
+        SET_FPRD(RD, result);			\
+    else    \
+         SET_FPRD(RD, FPRD(RS1) * FPRD(RS2) - FPRD(RS3));		\
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FMSUB_D, 0x01, "fmsub.d", "todo",
+    FloatMULT_ACC, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DFPR(RS1), DFPR(RS2), DFPR(RS3), DNA)
+#endif //RV64D
+
+
+CONNECT(FNMSUB_LINK)
+#define FNMSUB_S_IMPL {						\
+    qword_t fflags = 0;    \
+    w2f_t result; result.w = 0;  \
+    w2f_t rs1, rs2, rs3;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    rs3.w = NAN_BOXED_CHECK(RS3);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, NMSUB_OPE, ((-(FPR(RS1)*FPR(RS2)))+FPR(RS3)), rs1.f, rs2.f, rs3.f, result.w);   \
+    if(fflags & NV) \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    else {   \
+        result.f = (-(FPR(RS1) * FPR(RS2))) + FPR(RS3); \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);		\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FNMSUB_S, 0x00, "fnmsub.s", "todo",
+    FloatMULT_ACC, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DFPR(RS1), DFPR(RS2), DFPR(RS3), DNA)
+
+#ifdef RV64D
+#define FNMSUB_D_IMPL {						\
+    qword_t fflags = 0;    \
+    qword_t result = 0;  \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, NMSUB_OPE, (-(FPRD(RS1)*FPRD(RS2)))+FPRD(RS3), FPRD(RS1), FPRD(RS2), FPRD(RS3), result);   \
+    if(fflags & NV) \
+        SET_FPRD(RD, result);			\
+    else    \
+         SET_FPRD(RD, (-(FPRD(RS1) * FPRD(RS2))) + FPRD(RS3));		\
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FNMSUB_D, 0x01, "fnmsub.d", "todo",
+    FloatMULT_ACC, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DFPR(RS1), DFPR(RS2), DFPR(RS3), DNA)
+#endif //RV64D
+
+
+CONNECT(FNMADD_LINK)
+#define FNMADD_S_IMPL {						\
+    qword_t fflags = 0;    \
+    w2f_t result; result.w = 0;  \
+    w2f_t rs1, rs2, rs3;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    rs3.w = NAN_BOXED_CHECK(RS3);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, NMADD_OPE, ((-(FPR(RS1)*FPR(RS2)))-FPR(RS3)), rs1.f, rs2.f, rs3.f, result.w);   \
+    if(fflags & NV) \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    else {   \
+        result.f = (-(FPR(RS1) * FPR(RS2))) - FPR(RS3); \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);		\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FNMADD_S, 0x00, "fnmadd.s", "todo",
+    FloatMULT_ACC, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DFPR(RS3))
+
+#ifdef RV64D
+#define FNMADD_D_IMPL {						\
+    qword_t fflags = 0;    \
+    qword_t result = 0;  \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, NMADD_OPE, (-(FPRD(RS1)*FPRD(RS2)))-FPRD(RS3), FPRD(RS1), FPRD(RS2), FPRD(RS3), result);   \
+    if(fflags & NV) \
+        SET_FPRD(RD, result);			\
+    else    \
+         SET_FPRD(RD, (-(FPRD(RS1) * FPRD(RS2))) - FPRD(RS3));		\
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FNMADD_D, 0x01, "fnmadd.d", "todo",
+    FloatMULT_ACC, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DFPR(RS3))
+#endif //RV64D
+CONNECT(FLOATS_LINK)
+
+#define FADD_S_IMPL {						\
+    qword_t fflags = 0;    \
+    word_t RoundMode = 0;  \
+    w2f_t result; result.w = 0; \
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, ADD_OPE, FPR(RS1) + FPR(RS2), rs1.f, rs2.f, NA, result.w);    \
+    if(fflags & NV) \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    else {  \
+        /*if(RM == RESERVED_101 || RM == RESERVED_110)   \
+            panic("illegal Instruction Exception\n");   \
+        else if(RM == DYN) {   \
+            RoundMode = CSRS(FRM);  \
+        if(RoundMode == RESERVED_101 || RoundMode == RESERVED_110 || RoundMode == DYN)  \
+            panic("illegal Instruction Exception\n");   \
+        }else { \
+            RoundMode = RM; \
+            fprintf(stderr, "RM: %d\n", RoundMode); \
+            SINGLE_FLOAT_RM(FPR(RS1) + FPR(RS2), frd, RoundMode);    \
+            fprintf(stderr, "fadd res: %f\n", frd); \
+            SET_FPR(RD, frd);			\
+        }*/ \ 
+        result.f = FPR(RS1) + FPR(RS2); \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FADD_S, 0x00, "fadd.s", "todo",
+    FloatADD, F_FCOMP,
+    DFPR(RD), DNA,DNA,
+    DNA,      DFPR(RS1), DFPR(RS2), DNA)
+#define FSUB_S_IMPL {						\
+    qword_t fflags = 0;    \
+    w2f_t result; result.f = 0.0;  \
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, SUB_OPE, FPR(RS1) - FPR(RS2), rs1.f, rs2.f, NA, result.w);    \
+    if(fflags & NV) {\
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    }   \
+    else {   \
+        result.f = FPR(RS1) - FPR(RS2);    \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FSUB_S, 0x04, "fsub.s", "todo",
+    FloatADD, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+    
+#define FMUL_S_IMPL {						\
+    qword_t fflags = 0;    \
+    w2f_t result; result.w = 0;  \
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, MUL_OPE, FPR(RS1) * FPR(RS2), rs1.f, rs2.f, NA, result.w);   \
+    if(fflags & NV) \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    else {   \
+        result.f = FPR(RS1) * FPR(RS2); \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FMUL_S, 0x08, "fmul.s", "todo",
+    FloatMULT, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+#define FDIV_S_IMPL {						\
+    qword_t fflags = 0;    \
+    w2f_t result; result.w = 0;  \
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, DIV_OPE, FPR(RS1) / FPR(RS2), rs1.f, rs2.f, NA, result.w);   \
+    if(fflags & NV) \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    else {   \
+        result.f = FPR(RS1) / FPR(RS2); \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FDIV_S, 0x0c, "fdiv.s", "todo",
+    FloatDIV, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+
+#define FSQRT_S_IMPL {						\
+    qword_t fflags = 0;    \
+    w2f_t result;  \
+    w2f_t rs1;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, SQRT_OPE, sqrtf(FPR(RS1)), rs1.f, NA, NA, result.w);    \
+    if(fflags & NV) {\
+        SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    }   \
+    else {   \
+        result.f = sqrtf(FPR(RS1));    \
+        SET_FPRD_Q(RD, result.w | NAN_BOX);				\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FSQRT_S, 0x2c, "fsqrt.s", "todo",
+    FloatSQRT, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DNA, DNA)
+
+DEFLINK(FSGNJ_S_LINK,    0b0010000, "fgnj_s_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+DEFLINK(FMIN_MAX_S_LINK, 0b0010100, "fmin_max_s_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+DEFLINK(FCVT__S_LINK,     0b1100000, "fcvt__s_link", 20, 0b11111, NA)
+DEFLINK(FMVCLASS_LINK,   0b1110000, "fmvclass_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+DEFLINK(FCOMPARE_S_LINK, 0b1010000, "fcompare_s_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+DEFLINK(FCVT_S__LINK,    0b1101000, "fcvt_s__link", 20, 0b11111, NA)
+
+#define FMV_W_X_IMPL {						\
+    SET_FPRD_Q(RD, (GPR(RS1) & WORD_MASK) | NAN_BOX);\
+}
+DEFINST(FMV_W_X, 0x78, "fmv.w.x", "todo",
+    NA, F_ICOMP/*FIXME MV*/,
+    DGPR(RD), DNA,DNA,
+    DNA,      DFPR(RS1), DNA, DNA)
+
+#ifdef RV64D
+#define FMV_D_X_IMPL {						\
+    SET_FPRD_Q(RD, GPR(RS1));\
+}
+DEFINST(FMV_D_X, 0x79, "fmv.d.x", "todo",
+    NA, F_ICOMP/*FIXME MV*/,
+    DGPR(RD), DNA,DNA,
+    DNA,      DFPR(RS1), DNA, DNA)
+
+#define FADD_D_IMPL {						\
+    qword_t fflags = 0, RoundMode = 0;   \
+    q2d_t result; result.q = 0;     \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, ADD_OPE, FPRD(RS1) + FPRD(RS2), FPRD(RS1), FPRD(RS2), 0, result.q);    \
+    if(fflags & NV) \
+        SET_FPRD(RD, result.d);			\
+    else {  \
+        SET_FPRD(RD, FPRD(RS1) + FPRD(RS2));			\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FADD_D, 0x01, "fadd.d", "todo",
+    FloatADD, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+#define FSUB_D_IMPL {						\
+    qword_t fflags = 0, RoundMode = 0;   \
+    q2d_t result; result.q = 0;     \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, SUB_OPE, FPRD(RS1) - FPRD(RS2), FPRD(RS1), FPRD(RS2), 0, result.q);    \
+    if(fflags & NV) \
+        SET_FPRD(RD, result.d);			\
+    else {  \
+        SET_FPRD(RD, FPRD(RS1) - FPRD(RS2));			\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FSUB_D, 0x05, "fsub.d", "todo",
+    FloatADD, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+#define FMUL_D_IMPL {						\
+    qword_t fflags = 0, RoundMode = 0;   \
+    q2d_t result; result.q = 0;     \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, MUL_OPE, FPRD(RS1) * FPRD(RS2), FPRD(RS1), FPRD(RS2), 0, result.q);    \
+    if(fflags & NV) \
+        SET_FPRD(RD, result.d);			\
+    else {  \
+        SET_FPRD(RD, FPRD(RS1) * FPRD(RS2));			\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FMUL_D, 0x09, "fmul.d", "todo",
+    FloatMULT, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+#define FDIV_D_IMPL {						\
+    qword_t fflags = 0, RoundMode = 0;   \
+    q2d_t result; result.q = 0;     \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, DIV_OPE, FPRD(RS1) / FPRD(RS2), FPRD(RS1), FPRD(RS2), 0, result.q);    \
+    if(fflags & NV) \
+        SET_FPRD(RD, result.d);			\
+    else {  \
+        SET_FPRD(RD, FPRD(RS1) / FPRD(RS2));			\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FDIV_D, 0x0d, "fdiv.d", "todo",
+    FloatDIV, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+#define FSQRT_D_IMPL {						\
+    qword_t fflags = 0;    \
+    q2d_t result;  \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, SQRT_OPE, sqrtl(FPRD(RS1)), FPRD(RS1), 0, 0, result.q);    \
+    if(fflags & NV) {\
+        SET_FPRD(RD, result.d);			\
+    }   \
+    else {   \
+         SET_FPRD(RD, sqrtl(FPRD(RS1)));				\
+    }   \
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FSQRT_D, 0x2d, "fsqrt.d", "todo",
+    FloatSQRT, F_FCOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DNA, DNA)
+
+DEFLINK(FSGNJ_D_LINK,    0b0010001, "fgnj_d_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+DEFLINK(FMIN_MAX_D_LINK, 0b0010101, "fmin_max_d_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+DEFLINK(FCVT_SD_LINK,     0b0100000, "fcvt_sd_link", 20, 0b11111, NA)
+DEFLINK(FCVT_DS_LINK,     0b0100001, "fcvt_ds_link", 20, 0b11111, NA)
+DEFLINK(FCOMPARE_D_LINK, 0b1010001, "fcompare_d_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+DEFLINK(FMVCLASS_D_LINK,   0b1110001, "fmvclass_d_link", FUNCT3_SHIFT, FUNCT3_MASK, NA)
+DEFLINK(FCVT__D_LINK, 0b1100001, "fcvt__d_link", 20, 0b11111, NA)
+DEFLINK(FCVT_D__LINK, 0b1101001, "fcvt_d__link", 20, 0b11111, NA)
+
+
+#endif //RV64D
+#ifdef RV64D
+CONNECT(FSGNJ_D_LINK)
+#define FSGNJ_D_IMPL {							\
+    qword_t _value = FPRD_Q(RS1) & 0x7fffffffffffffff;		\
+    qword_t _sign = FPRD_Q(RS2) &  0x8000000000000000;    \
+    SET_FPRD_Q(RD, _sign | _value);					\
+}
+DEFINST(FSGNJ_D, 0x00, "fsgnj.d", "todo",
+    IntALU, F_ICOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+#define FSGNJN_D_IMPL {						\
+    qword_t _value = FPRD_Q(RS1) &    0x7fffffffffffffff;		\
+    qword_t _sign = (~FPRD_Q(RS2)) &  0x8000000000000000;		\
+    SET_FPRD_Q(RD, _sign | _value);					\
+}
+DEFINST(FSGNJN_D, 0x01, "fsgnjn.d", "todo",
+    IntALU, F_ICOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+
+#define FSGNJX_D_IMPL {\
+    qword_t _value = FPRD_Q(RS1) & 0x7fffffffffffffff;		\
+    qword_t _sign = (FPRD_Q(RS1) ^ FPRD_Q(RS2))  & 0x8000000000000000;		\
+    SET_FPRD_Q(RD, _sign | _value);					\
+}
+DEFINST(FSGNJX_D, 0x02, "fsgnjx.d", "todo",
+    IntALU, F_ICOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+CONNECT(FMIN_MAX_D_LINK)
+
+#define FMIN_D_IMPL {\
+    double _result = 0;	    \			
+    bool _isInvalid = false;\
+    F_DOUBLE_CMP(MIN_OPE, FPRD(RS1), FPRD(RS2), _result, _isInvalid);    \
+    SET_FPRD(RD, _result);			\
+    if(_isInvalid)   \
+        SET_CSRS(FFLAGS, NV);   \
+}
+DEFINST(FMIN_D, 0x00, "fmin.d", "todo",
+    FloatCMP, F_ICOMP,
+    DFPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+
+#define FMAX_D_IMPL {\
+    double _result = 0;	    \			
+    bool _isInvalid = false;\
+    F_DOUBLE_CMP(MAX_OPE, FPRD(RS1), FPRD(RS2), _result, _isInvalid);    \
+    SET_FPRD(RD, _result);			\
+    if(_isInvalid)   \
+        SET_CSRS(FFLAGS, NV);   \
+}
+DEFINST(FMAX_D, 0x01, "fmax.d", "todo",
+    FloatCMP, F_ICOMP/*FIXME FMAX*/,
+    DFPR(RD), DNA,  DNA,
+    DNA,    DFPR(RS1), DFPR(RS2), DNA)
+
+CONNECT(FCVT_SD_LINK)
+// double to single
+#define FCVT_S_D_IMPL {				\
+    double res = 0; \
+    word_t RoundMode = RESERVED_101;   \
+    FLOAT_FORMAT_CONVERT(FPRD(RS1), DOUBLE, res, SINGLE, RoundMode); \
+    SET_FPR(RD, res); \
+}
+DEFINST(FCVT_S_D, 0x01, "fcvt.s.d", "todo",
+    FloatCVT, F_FCOMP /*FIXME FCVT*/,
+    DFPR(RD), DNA, DNA,
+    DNA,    DFPR(RS1), DNA, DNA)
+
+CONNECT(FCVT_DS_LINK)
+
+#define FCVT_D_S_IMPL {\
+    float _rs1 = FPR(RS1);		\
+    SET_FPRD(RD, (double)_rs1);		\
+}
+DEFINST(FCVT_D_S, 0x00, "fcvt.d.s", "todo",
+    FloatCVT, F_FCOMP /*FIXME FCVT*/,
+    DFPR(RD), DNA,DNA,
+    DNA,     DFPR(RS1), DNA, DNA)
+
+CONNECT(FCOMPARE_D_LINK)
+#define FEQ_D_IMPL {\
+    qword_t fflags = 0; \
+    q2d_t result; result.q = 0;     \
+    bool IsInvalid = false; \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, EQ_OPE, 0, FPRD(RS1), FPRD(RS2), 0,result.q); \
+    DOUBLE_INVALID_INPUT_DETECT(EQ_OPE, FPRD(RS1), FPRD(RS2), IsInvalid);  \
+    if(IsInvalid)   \
+        SET_GPR(RD, 0); \
+    else if(FPRD(RS1) == FPRD(RS2)) {				\
+        SET_GPR(RD, 1);					\
+    } else {						\
+        SET_GPR(RD, 0);					\
+    }							\
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FEQ_D, 0x02, "feq.d", "todo",
+    FloatCMP, F_FCOMP,
+    DGPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+
+#define FLT_D_IMPL {\
+    qword_t fflags = 0; \
+    q2d_t result; result.q = 0;     \
+    bool IsInvalid = false; \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, CMP_OPE, 0, FPRD(RS1), FPRD(RS2), 0,result.q); \
+    DOUBLE_INVALID_INPUT_DETECT(CMP_OPE, FPRD(RS1), FPRD(RS2), IsInvalid);  \
+    if(IsInvalid)   \
+        SET_GPR(RD, 0); \
+    else if(FPRD(RS1) < FPRD(RS2)) {				\
+        SET_GPR(RD, 1);					\
+    } else {						\
+        SET_GPR(RD, 0);					\
+    }							\
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FLT_D, 0x01, "flt.d", "todo",
+    FloatCMP, F_FCOMP,
+    DGPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+
+#define FLE_D_IMPL {\
+    qword_t fflags = 0; \
+    q2d_t result; result.q = 0;     \
+    bool IsInvalid = false; \
+    DOUBLE_FLOAT_EXCEPTION_HANDLER(fflags, CMP_OPE, 0, FPRD(RS1), FPRD(RS2), 0,result.q); \
+    DOUBLE_INVALID_INPUT_DETECT(CMP_OPE, FPRD(RS1), FPRD(RS2), IsInvalid);  \
+    if(IsInvalid)   \
+        SET_GPR(RD, 0); \
+    else if(FPRD(RS1) <= FPRD(RS2)) {				\
+        SET_GPR(RD, 1);					\
+    } else {						\
+        SET_GPR(RD, 0);					\
+    }							\
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FLE_D, 0x00, "fle.d", "todo",
+    FloatCMP, F_FCOMP,
+    DGPR(RD), DNA, DNA,
+    DNA,     DFPR(RS1), DFPR(RS2), DNA)
+
+CONNECT(FMVCLASS_D_LINK)
+
+#define FMV_X_D_IMPL {			\
+    SET_GPR(RD, FPRD_Q(RS1));				\
+}
+DEFINST(FMV_X_D, 0x00, "fmv.x.d", "todo",
+    FloatCVT, F_ICOMP,
+    DGPR(RD), DNA, DNA,
+    DNA,       DFPR(RS1), DNA, DNA)
+
+#define FCLASS_D_IMPL {							\
+    q2d_t _q2d;							\
+    _q2d.d = FPRD(RS1);						\
+    qword_t _result = 0;						\
+    qword_t sign = DOUBLE_SIGN(_q2d.q);				\
+    qword_t exp = DOUBLE_EXP(_q2d.q);				\
+    qword_t digits = DOUBLE_DIGITS(_q2d.q);				\
+    if (sign == 0 && exp == 0 && digits == 0) 			\
+        _result = (1 << 4); /*0*/					\
+    else if (sign == 1 && exp == 0 && digits == 0) 			\
+        _result = (1 << 3); /*-0*/ 					\
+    else if (sign == 0 && exp == 2047 && digits == 0) 		\
+        _result = (1 << 7); /*inf*/ 					\
+    else if (sign == 1 && exp == 2047 && digits == 0) 		\
+        _result = 1; /*-inf*/ 					\
+    else if (sign == 0 && exp == 2047 && (digits & 0x8000000000000)) \
+        _result = (1 << 9);  /*NAN*/					\
+    else if (exp == 2047 && digits != 0) 				\
+        _result = (1 << 8);  /*signaling NAN*/				\
+    else if (sign == 0 && exp == 0 && digits != 0) 			\
+        _result = (1 << 5);  /*positive subnormal*/			\
+    else if (sign == 1 && exp == 0 && digits != 0) 			\
+        _result = (1 << 2);  /*negative subnormal*/			\
+    else if (sign == 1) {						\
+        _result = (1 << 1);  /*negative normal*/			\
+    } else {							\
+        _result = (1 << 6);  /*positive normal*/			\
+    }								\
+    SET_GPR(RD, _result);						\
+}
+DEFINST(FCLASS_D, 0x01, "fclass.d", "todo",
+    FloatCVT, F_FCOMP/*FIXME FCLASS*/,
+    DGPR(RD), DNA, DNA,
+    DNA, DFPR(RS1), DNA, DNA)
+
+CONNECT(FCVT__D_LINK)
+
+#define FCVT_W_D_IMPL {\
+    word_t RoundMode = 0;   \
+    sword_t res = 0; \
+    if(RM == RESERVED_101 || RM == RESERVED_110)   \
+        panic("illegal Instruction Exception\n");   \
+    else if(RM == DYN) {   \
+        RoundMode = CSRS(FRM);  \
+        if(RoundMode == RESERVED_101 || RoundMode == RESERVED_110 || RoundMode == DYN)  \
+            panic("illegal Instruction Exception\n");   \
+    }else { \
+        RoundMode = RM; \
+    }   \
+    FLOAT_FORMAT_CONVERT(FPRD(RS1), DOUBLE, res, WORD, RoundMode); \
+    SET_GPR(RD, SEXT(res)); \
+}
+DEFINST(FCVT_W_D, 0x00, "fcvt.w.d", "todo",
+    FloatCVT, F_FCOMP /*FIXME FCVT*/,
+    DGPR(RD), DNA,  DNA,
+    DNA,     DFPR(RS1), DNA, DNA)
+
+#define FCVT_WU_D_IMPL {\
+    word_t RoundMode = 0;   \
+    word_t res = 0; \
+    if(RM == RESERVED_101 || RM == RESERVED_110)   \
+        panic("illegal Instruction Exception\n");   \
+    else if(RM == DYN) {   \
+        RoundMode = CSRS(FRM);  \
+        if(RoundMode == RESERVED_101 || RoundMode == RESERVED_110 || RoundMode == DYN)  \
+            panic("illegal Instruction Exception\n");   \
+    }else { \
+        RoundMode = RM; \
+    }   \
+    FLOAT_FORMAT_CONVERT(FPRD(RS1), DOUBLE, res, U_WORD, RoundMode); \
+    SET_GPR(RD, SEXT(res)); \
+}
+DEFINST(FCVT_WU_D, 0x01, "fcvt.wu.d", "todo",
+    FloatCVT, F_FCOMP /*FIXME FCVT*/,
+    DGPR(RD), DNA, DNA,
+    DNA,      DFPR(RS1), DNA, DNA)
+
+#define FCVT_L_D_IMPL {\
+    word_t RoundMode = 0;   \
+    sqword_t res = 0; \
+    if(RM == RESERVED_101 || RM == RESERVED_110)   \
+        panic("illegal Instruction Exception\n");   \
+    else if(RM == DYN) {   \
+        RoundMode = CSRS(FRM);  \
+        if(RoundMode == RESERVED_101 || RoundMode == RESERVED_110 || RoundMode == DYN)  \
+            panic("illegal Instruction Exception\n");   \
+    }else { \
+        RoundMode = RM; \
+    }   \
+    FLOAT_FORMAT_CONVERT(FPRD(RS1), DOUBLE, res, LONG, RoundMode); \
+    SET_GPR(RD, res); \
+}
+DEFINST(FCVT_L_D, 0x02, "fcvt.l.d", "todo",
+    FloatCVT, F_FCOMP /*FIXME FCVT*/,
+    DGPR(RD), DNA,  DNA,
+    DNA,     DFPR(RS1), DNA, DNA)
+
+#define FCVT_LU_D_IMPL {\
+    word_t RoundMode = 0;   \
+    qword_t res = 0; \
+    if(RM == RESERVED_101 || RM == RESERVED_110)   \
+        panic("illegal Instruction Exception\n");   \
+    else if(RM == DYN) {   \
+        RoundMode = CSRS(FRM);  \
+        if(RoundMode == RESERVED_101 || RoundMode == RESERVED_110 || RoundMode == DYN)  \
+            panic("illegal Instruction Exception\n");   \
+    }else { \
+        RoundMode = RM; \
+    }   \
+    FLOAT_FORMAT_CONVERT(FPRD(RS1), DOUBLE, res, U_LONG, RoundMode); \
+    SET_GPR(RD, res); \
+}
+DEFINST(FCVT_LU_D, 0x03, "fcvt.lu.d", "todo",
+    FloatCVT, F_FCOMP /*FIXME FCVT*/,
+    DGPR(RD), DNA, DNA,
+    DNA,      DFPR(RS1), DNA, DNA)
+
+CONNECT(FCVT_D__LINK)
+
+#define FCVT_D_W_IMPL {\
+    SET_FPRD(RD, (double)(sword_t)(GPR(RS1)&WORD_MASK));	\
+}
+DEFINST(FCVT_D_W, 0x00, "fcvt.d.w", "todo",
+    FloatCVT, F_FCOMP /*FIXME FCVT*/,
+    DFPR(RD), DNA, DNA,
+    DNA,      DFPR(RS1), DNA, DNA)
+
+#define FCVT_D_WU_IMPL {\
+    SET_FPRD(RD, (double)(word_t)(GPR(RS1)&WORD_MASK));	\
+}
+DEFINST(FCVT_D_WU, 0x01, "fcvt.d.wu", "todo",
+    FloatCVT, F_FCOMP /*FIXME FCVT*/,
+    DFPR(RD), DNA,DNA,
+    DNA,       DFPR(RS1), DNA, DNA)
+
+#define FCVT_D_L_IMPL {\
+    SET_FPRD(RD, (double)(sqword_t)(GPR(RS1)));	\
+}
+DEFINST(FCVT_D_L, 0x02, "fcvt.d.l", "todo",
+    FloatCVT, F_FCOMP /*FIXME FCVT*/,
+    DFPR(RD), DNA, DNA,
+    DNA,      DFPR(RS1), DNA, DNA)
+
+#define FCVT_D_LU_IMPL {\
+    SET_FPRD(RD, (double)(qword_t)(GPR(RS1)));	\
+}
+DEFINST(FCVT_D_LU, 0x03, "fcvt.d.lu", "todo",
+    FloatCVT, F_FCOMP /*FIXME FCVT*/,
+    DFPR(RD), DNA,DNA,
+    DNA,       DFPR(RS1), DNA, DNA)
+
+#endif //RV64D
+
+
+CONNECT(FSGNJ_S_LINK)
+#define FSGNJ_S_IMPL {							\
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    word_t _value = rs1.w & 0x7fffffff;			\
+    word_t _sign = rs2.w & 0x80000000;			\
+    SET_FPRD_Q(RD, _sign | _value | NAN_BOX);					\
+}
+DEFINST(FSGNJ_S, 0x00, "fsgnj.s", "todo",
+    IntALU, F_ICOMP,
+    DGPR(RD), DNA,  DNA,
+    DNA,      DNA, DNA, DNA)
+
+#define FSGNJN_S_IMPL {							\
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    word_t _value = rs1.w & 0x7fffffff;			\
+    word_t _sign = (~rs2.w) & 0x80000000;			\
+    SET_FPRD_Q(RD, _sign | _value | NAN_BOX);					\
+}
+DEFINST(FSGNJN_S, 0x01, "fsgnjn.s", "todo",
+    IntALU, F_ICOMP,
+    DGPR(RD), DNA, DNA,
+    DNA,       DNA, DNA, DNA)
+
+#define FSGNJX_S_IMPL {							\
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    word_t _value = rs1.w & 0x7fffffff;			\
+    word_t _sign = (rs1.w ^ rs2.w) & 0x80000000;	\
+    SET_FPRD_Q(RD, _sign | _value | NAN_BOX);					\
+}
+DEFINST(FSGNJX_S, 0x02, "fsgnjx.s", "todo",
+    IntALU, F_ICOMP,
+    DGPR(RD), DNA,  DNA,
+    DNA,      DNA, DNA, DNA)
+
+
+CONNECT(FMIN_MAX_S_LINK)
+#define FMIN_S_IMPL {\
+    w2f_t result; result.w = 0;	    \			
+    bool _isInvalid = false;\
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    F_SINGLE_CMP(MIN_OPE, rs1.f, rs2.f, result.f, _isInvalid);    \
+    SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    if(_isInvalid)   \
+        SET_CSRS(FFLAGS, NV);   \
+}
+DEFINST(FMIN_S, 0x00, "fmin.s", "todo",
+    FloatCMP, F_ICOMP/*FIXME FMIN*/,
+    DFPR(RD), DNA, DNA,
+    DNA,       DFPR(RS1), DFPR(RS2), DNA)
+
+#define FMAX_S_IMPL {\
+    w2f_t result; result.w = 0;	    \			
+    bool _isInvalid = false;\
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    F_SINGLE_CMP(MAX_OPE, rs1.f, rs2.f, result.f, _isInvalid);    \
+    SET_FPRD_Q(RD, result.w | NAN_BOX);			\
+    if(_isInvalid)   \
+        SET_CSRS(FFLAGS, NV);   \
+}
+DEFINST(FMAX_S, 0x01, "fmax.s", "todo",
+    FloatCMP, F_ICOMP/*FIXME FMAX*/,
+    DFPR(RD), DNA,  DNA, DNA,
+    DFPR(RS1), DFPR(RS2), DNA)
+
+CONNECT(FCVT__S_LINK)
+#define FCVT_W_S_IMPL {				\
+    word_t RoundMode = 0;   \
+    sword_t res = 0; \
+    if(RM == RESERVED_101 || RM == RESERVED_110)   \
+        panic("illegal Instruction Exception\n");   \
+    else if(RM == DYN) {   \
+        RoundMode = CSRS(FRM);  \
+        if(RoundMode == RESERVED_101 || RoundMode == RESERVED_110 || RoundMode == DYN)  \
+            panic("illegal Instruction Exception\n");   \
+    }else { \
+        RoundMode = RM; \
+    }   \
+    FLOAT_FORMAT_CONVERT(FPR(RS1), SINGLE, res, WORD, RoundMode); \
+    SET_GPR(RD, SEXT(res)); \
+}
+DEFINST(FCVT_W_S, 0x00, "fcvt.w.s", "todo",
+    FloatCVT, F_ICOMP,
+    DGPR(RD), DNA,  DNA,
+    DNA, DFPR(RS1), DNA, DNA)
+
+#define FCVT_L_S_IMPL {				\
+    word_t RoundMode = 0;   \
+    sqword_t res = 0; \
+    if(RM == RESERVED_101 || RM == RESERVED_110)   \
+        panic("illegal Instruction Exception\n");   \
+    else if(RM == DYN) {   \
+        RoundMode = CSRS(FRM);  \
+        if(RoundMode == RESERVED_101 || RoundMode == RESERVED_110 || RoundMode == DYN)  \
+            panic("illegal Instruction Exception\n");   \
+    }else { \
+        RoundMode = RM; \
+    }   \
+    FLOAT_FORMAT_CONVERT(FPR(RS1), SINGLE, res, LONG, RoundMode); \
+    SET_GPR(RD, res); \
+}
+DEFINST(FCVT_L_S, 0b00010, "fcvt.l.s", "todo",
+    FloatCVT, F_ICOMP,
+    DGPR(RD), DNA,  DNA,
+    DNA, DFPR(RS1), DNA, DNA)
+
+#define FCVT_WU_S_IMPL {\
+    word_t RoundMode = 0;   \
+    word_t res = 0; \
+    if(RM == RESERVED_101 || RM == RESERVED_110)   \
+        panic("illegal Instruction Exception\n");   \
+    else if(RM == DYN) {   \
+        RoundMode = CSRS(FRM);  \
+        if(RoundMode == RESERVED_101 || RoundMode == RESERVED_110 || RoundMode == DYN)  \
+            panic("illegal Instruction Exception\n");   \
+    }else { \
+        RoundMode = RM; \
+    }   \
+    FLOAT_FORMAT_CONVERT(FPR(RS1), SINGLE, res, U_WORD, RoundMode); \
+    SET_GPR(RD, SEXT(res)); \
+}
+DEFINST(FCVT_WU_S, 0x01, "fcvt.wu.s", "todo",
+    FloatCVT, F_ICOMP,
+    DGPR(RD), DNA, DNA,
+    DNA, DFPR(RS1), DNA, DNA)
+#define FCVT_LU_S_IMPL {\
+    word_t RoundMode = 0;   \
+    qword_t res = 0; \
+    if(RM == RESERVED_101 || RM == RESERVED_110)   \
+        panic("illegal Instruction Exception\n");   \
+    else if(RM == DYN) {   \
+        RoundMode = CSRS(FRM);  \
+        if(RoundMode == RESERVED_101 || RoundMode == RESERVED_110 || RoundMode == DYN)  \
+            panic("illegal Instruction Exception\n");   \
+    }else { \
+        RoundMode = RM; \
+    }   \
+    FLOAT_FORMAT_CONVERT(FPR(RS1), SINGLE, res, U_LONG, RoundMode); \
+    SET_GPR(RD, res); \
+}
+DEFINST(FCVT_LU_S, 0b00011, "fcvt.lu.s", "todo",
+    FloatCVT, F_ICOMP,
+    DGPR(RD), DNA, DNA,
+    DNA, DFPR(RS1), DNA, DNA)
+CONNECT(FMVCLASS_LINK)
+
+#define FMV_X_W_IMPL {			\
+    /* need NAN-Boxing check? */  \
+    \
+    /*w2f_t rs1;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    if(rs1.w == FLOAT_QUIET_NAN)    \
+        SET_FPRD_Q(RD, FLOAT_QUIET_NAN | NAN_BOX);	\				
+    else*/    \
+        SET_GPR(RD, SEXT(FPR_SW(RS1) & WORD_MASK));				\
+}
+DEFINST(FMV_X_W, 0x00, "fmv.x.w", "todo",
+    IntALU, F_ICOMP,
+    DGPR(RD), DNA, DNA,
+    DNA, DFPR(RS1), DNA, DNA)
+
+#define FCLASS_S_IMPL {							\
+    w2f_t _w2f;							\
+    _w2f.f = FPR(RS1);						\
+    word_t _result = 0;						\
+    word_t sign = FLOAT_SIGN(_w2f.w);				\
+\
+    word_t exp = FLOAT_EXP(_w2f.w);					\
+    word_t digits = FLOAT_DIGITS(_w2f.w);				\
+    if (sign == 0 && exp == 0 && digits == 0) 			\
+        _result = (1 << 4); /*0*/					\
+    else if (sign == 1 && exp == 0 && digits == 0) 			\
+        _result = (1 << 3); /*-0*/ 					\
+    else if (sign == 0 && exp == 255 && digits == 0) 		\
+        _result = (1 << 7); /*inf*/ 					\
+    else if (sign == 1 && exp == 255 && digits == 0) 		\
+        _result = 1; /*-inf*/ 					\
+    else if (exp == 255 && (digits & 0x400000)) 	\
+        _result = (1 << 9);  /*quiet NAN*/					\
+    else if (exp == 255 && digits != 0) 				\
+        _result = (1 << 8);  /*signaling NAN*/				\
+    else if (sign == 0 && exp == 0 && digits != 0) 			\
+        _result = (1 << 5);  /*positive subnormal*/			\
+    else if (sign == 1 && exp == 0 && digits != 0) 			\
+        _result = (1 << 2);  /*negative subnormal*/			\
+    else if (sign == 1) {						\
+        _result = (1 << 1);  /*negative normal*/			\
+    } else {							\
+        _result = (1 << 6);  /*positive normal*/			\
+    }								\
+    SET_GPR(RD, _result);						\
+}
+DEFINST(FCLASS_S, 0x01, "fclass.s", "todo",
+    FloatCMP, F_FCOMP,
+    DGPR(RD), DNA,  DNA,
+    DNA,      DFPR(RS1), DNA, DNA)
+
+CONNECT(FCOMPARE_S_LINK)
+
+#define FEQ_S_IMPL {						\
+    qword_t fflags = 0; \
+    w2f_t result; result.f = 0.0;  \
+    bool IsInvalid = false; \
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, EQ_OPE, NA, rs1.f, rs2.f, NA, result.w); \
+    SINGLE_INVALID_INPUT_DETECT(EQ_OPE, rs1.f, rs2.f, IsInvalid);  \
+    if(IsInvalid)   \
+        SET_GPR(RD, 0); \
+    else if(FPR(RS1) == FPR(RS2)) {				\
+        SET_GPR(RD, 1);					\
+    } else {						\
+        SET_GPR(RD, 0);					\
+    }							\
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FEQ_S, 0x02, "feq.s", "todo",
+    FloatCMP, F_FCOMP,
+    DGPR(RD), DNA, DNA,
+    DNA,       DFPR(RS1), DFPR(RS2), DNA)
+
+#define FLT_S_IMPL {\
+    qword_t fflags = 0; \
+    w2f_t result; result.w = 0;  \
+    bool IsInvalid = false; \
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, CMP_OPE, NA, rs1.f, rs2.f, NA, result.w); \
+    SINGLE_INVALID_INPUT_DETECT(CMP_OPE, rs1.f, rs2.f, IsInvalid);  \
+    if(IsInvalid)   \
+        SET_GPR(RD, 0); \
+    else if(FPR(RS1) < FPR(RS2)) {				\
+        SET_GPR(RD, 1);					\
+    } else {						\
+        SET_GPR(RD, 0);					\
+    }							\
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FLT_S, 0x01, "flt.s", "todo",
+    FloatCMP, F_FCOMP,
+    DGPR(RD), DNA, DNA,
+    DNA,      DFPR(RS1), DFPR(RS2), DNA)
+
+#define FLE_S_IMPL {						\
+    qword_t fflags = 0; \
+    w2f_t result;  result.w = 0;\
+    bool IsInvalid = false; \
+    w2f_t rs1, rs2;    \
+    rs1.w = NAN_BOXED_CHECK(RS1);   \
+    rs2.w = NAN_BOXED_CHECK(RS2);   \
+    SINGLE_FLOAT_EXCEPTION_HANDLER(fflags, CMP_OPE, NA, rs1.f, rs2.f, NA, result.w); \
+    SINGLE_INVALID_INPUT_DETECT(CMP_OPE, rs1.f, rs2.f, IsInvalid);  \
+    if(IsInvalid)   \
+        SET_GPR(RD, 0); \
+    else if(FPR(RS1) <= FPR(RS2)) {				\
+        SET_GPR(RD, 1);					\
+    } else {						\
+        SET_GPR(RD, 0);					\
+    }							\
+    SET_CSRS(FFLAGS, fflags);    \
+}
+DEFINST(FLE_S, 0x00, "fle.s", "todo",
+    FloatCMP, F_FCOMP,
+    DGPR(RD), DNA, DNA,
+    DNA,       DFPR(RS1), DFPR(RS2), DNA)
+
+CONNECT(FCVT_S__LINK)
+
+#define FCVT_S_W_IMPL {						\
+    SET_FPR(RD, (float)((sword_t)(GPR(RS1)&WORD_MASK)));	\
+}
+DEFINST(FCVT_S_W, 0x00, "fcvt.s.w", "todo",
+    FloatCVT, F_ICOMP,
+    DGPR(RD), DNA, DNA,
+    DNA, DFPR(RS1), DNA, DNA)
+
+#define FCVT_S_WU_IMPL {					\
+    SET_FPR(RD, (float)((word_t)(GPR(RS1)&WORD_MASK)));	\
+}
+DEFINST(FCVT_S_WU, 0x01, "fcvt.s.wu", "todo",
+    FloatCVT, F_ICOMP,
+    DGPR(RD), DNA,  DNA,
+    DNA, DFPR(RS1), DNA, DNA)
+
+#define FCVT_S_L_IMPL {						\
+    SET_FPR(RD, (float)((sqword_t)GPR(RS1)));	\
+}
+DEFINST(FCVT_S_L, 0b00010, "fcvt.s.l", "todo",
+    FloatCVT, F_ICOMP,
+    DGPR(RD), DNA, DNA,
+    DNA, DFPR(RS1), DNA, DNA)
+
+#define FCVT_S_LU_IMPL {					\
+    SET_FPR(RD, (float)((qword_t)GPR(RS1)));	\
+}
+DEFINST(FCVT_S_LU, 0b00011, "fcvt.s.lu", "todo",
+    FloatCVT, F_ICOMP,
+    DGPR(RD), DNA,  DNA,
+    DNA, DFPR(RS1), DNA, DNA)
+
+
+#endif //RV64F
+
+#ifdef RV64C
+
+CONNECT(C0_LINK)
+
+#define C_ADDI4SPN_IMPL \
+    {   \
+        if(IMM_C_4SPN == NA)    \
+            DECLARE_FAULT(md_fault_break);  \
+            \
+        SET_GPR(RD_C_x8, GPR(MD_REG_SP) + EXT(IMM_C_4SPN));  \
+    }
+DEFINST(C_ADDI4SPN,
+0x00, "c.addi4spn", "todo",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD_C_x8), DNA, DNA,
+    DNA, DGPR(MD_REG_SP), DNA, DNA)
+
+#define C_FLD_IMPL  \
+    {   \
+        sqword_t _result;						\
+        enum md_fault_type _fault;				\
+                                \
+        _result = READ_QWORD(GPR(RS1_C_x8) + EXT(DIMM_C_BRLS), _fault);	\
+        if(_fault != md_fault_none)				\
+            DECLARE_FAULT(_fault);				\
+        SET_FPRD_Q(RD_C_x8, _result);		/*check*/		\
+    }
+DEFINST(C_FLD,
+0x01, "c.fld", "todo",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DFPR(RD_C_x8), DNA, DNA,
+    DNA, DGPR(RS1_C_x8), DNA, DNA)
+
+#define C_LW_IMPL   \
+    {   \
+        sword_t _result;    \
+        enum md_fault_type _fault;   \
+        _result = READ_WORD((GPR(RS1_C_x8) + EXT(WIMM_C_BRLS)), _fault);    \
+        if(_fault != md_fault_none)                \
+            DECLARE_FAULT(_fault);                \
+        SET_GPR(RD_C_x8, (ext_signed_t)(_result));    \
+    }
+DEFINST(C_LW,
+0x02, "c.lw", "todo",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD_C_x8), DNA, DNA,
+    DNA, DGPR(RS1_C_x8), DNA, DNA)
+
+#define C_LD_IMPL    \
+    {   \
+        sqword_t _result;                        \
+        enum md_fault_type _fault;                \
+        _result = READ_QWORD((GPR(RS1_C_x8) + EXT(DIMM_C_BRLS)), _fault);    \
+        if(_fault != md_fault_none)                \
+            DECLARE_FAULT(_fault);                \
+        SET_GPR(RD_C_x8, _result);    \
+    }
+DEFINST(C_LD,
+0x03, "c.ld", "todo",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD_C_x8), DNA, DNA,
+        DNA, DGPR(RS1_C_x8), DNA, DNA)
+
+#define C_FSD_IMPL  \
+    {   \
+        enum md_fault_type _fault;				\
+        md_addr_t _addr = GPR(RS1_C_x8) + EXT(DIMM_C_BRLS);		\
+        WRITE_QWORD(FPRD_Q(RS2_C_x8), _addr, _fault);		\
+        if(_fault != md_fault_none)				\
+            DECLARE_FAULT(_fault);				\
+    }
+DEFINST(C_FSD,
+0x05, "c.fsd", "todo",
+WrPort, F_MEM|F_STORE|F_DISP,
+DNA, DNA, DNA,
+    DNA, DGPR(RS1), DFPR(RS2), DNA)
+
+#define C_SW_IMPL   \
+    {   \
+        word_t _src;                        \
+        enum md_fault_type _fault;                \
+                                \
+        _src = WORD_MASK & (GPR(RS2_C_x8));        \
+        WRITE_WORD(_src, (GPR(RS1_C_x8) + EXT(WIMM_C_BRLS)),  _fault);    \
+        if (_fault != md_fault_none)                \
+            DECLARE_FAULT(_fault);                \
+    }
+DEFINST(C_SW,
+0x06, "c.sw", "todo",
+WrPort, F_MEM|F_STORE|F_DISP,
+DNA, DNA,  DNA, 
+    DNA, DGPR(RS1_C_x8), DGPR(RS2_C_x8), DNA)
+
+#define C_SD_IMPL   \
+    {   \
+        qword_t _src;                        \
+        enum md_fault_type _fault;                \
+                                \
+        _src = (qword_t)(GPR(RS2_C_x8));        \
+        WRITE_QWORD(_src, (GPR(RS1_C_x8) + EXT(DIMM_C_BRLS)),  _fault);    \
+        if (_fault != md_fault_none)                \
+            DECLARE_FAULT(_fault);                \
+    }
+DEFINST(C_SD,
+0x07, "c.sd", "todo",
+WrPort, F_MEM|F_STORE|F_DISP,
+DNA, DNA,  DNA, 
+    DNA, DGPR(RS1_C_x8), DGPR(RS2_C_x8), DNA)
+
+CONNECT(C1_LINK)
+
+#define C_ADDI_IMPL \
+    {   \
+        if((RS1_RD_C_x32 == MD_REG_ZERO) | (IMM_C_5_4_0 == NA)) \
+            DECLARE_FAULT(md_fault_break);  \
+        SET_GPR(RS1_RD_C_x32, GPR(RS1_RD_C_x32) + SEXT_TO(IMM_C_5_4_0, 6, 64));   \
+    }
+DEFINST(C_ADDI,
+0x00, "c.addi", "todo",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RS1_RD_C_x32), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x32), DNA, DNA)
+
+#define C_ADDIW_IMPL    \
+    {   \
+        if(RS1_RD_C_x32 == MD_REG_ZERO) \
+            DECLARE_FAULT(md_fault_break);  \
+        SET_GPR(RS1_RD_C_x32, SEXT_TO((((GPR(RS1_RD_C_x32) & LOW_MASK) + (SEXT_TO(IMM_C_5_4_0, 6, 32))) & LOW_MASK), 32, 64));   \
+    }
+DEFINST(C_ADDIW,
+0x01, "c.addiw", "todo",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RS1_RD_C_x32), DNA, DNA,
+    DNA, DGPR(RS1_RD_C_x32), DNA, DNA)
+
+#define C_LI_IMPL   \
+    {   \
+        enum md_fault_type _fault;  \
+        if (RD_C_x32 == MD_REG_ZERO)                \
+            DECLARE_FAULT(_fault);  \
+        SET_GPR(RD_C_x32, SEXT_TO(IMM_C_5_4_0, 6, 64));  \
+    }
+DEFINST(C_LI,
+0x02, "c.li", "todo",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RD_C_x32), DNA, DNA,
+        DNA, DNA, DNA, DNA)
+
+DEFLINK(C1_16SP_LINK, 0x03, "c1_16sp_link", FUNCT3_C_11_7_SHIFT, FUNCT3_C_11_7_MASK, NA)
+DEFLINK(C1_LOGI_LINK, 0x04, "c1_logi_link", FUNCT2_C_SHIFT, FUNCT2_C_MASK, NA)
+
+#define C_J_IMPL    \
+    {   \
+        SET_TPC(CPC + SEXT_TO(JIMM_C, 12, 64));  \
+        SET_NPC(CPC + SEXT_TO(JIMM_C, 12, 64));  \
+        CtrlInstTaken(true); \
+    }
+DEFINST(C_J,
+0x05, "c.j", "todo",
+IntALU, F_CTRL|F_UNCOND|F_DIRJMP,
+DNA, DNA, DNA,
+    DNA, DNA, DNA, DNA)
+
+#define C_BEQZ_IMPL \
+    {   \
+        SET_TPC(CPC + SEXT_TO(BIMM_C, 9, 64));                    \
+        if (GPR(RS1_C_x8) == MD_REG_ZERO) {               \
+            SET_NPC(CPC + SEXT_TO(BIMM_C, 9, 64));    \                       
+            CtrlInstTaken(true); \
+        }   \
+    }
+DEFINST(C_BEQZ,
+0x06, "c.beqz", "todo",
+IntALU, F_CTRL|F_COND|F_DIRJMP,
+DNA, DNA, DNA, 
+    DNA, DGPR(RS1_C_x8), DNA, DNA)
+
+#define C_BNEZ_IMPL \
+    {   \
+        SET_TPC(CPC + SEXT_TO(BIMM_C, 9, 64));                    \
+        if (GPR(RS1_C_x8) != MD_REG_ZERO)     {      \
+            SET_NPC(CPC + SEXT_TO(BIMM_C, 9, 64));        \
+            CtrlInstTaken(true); \
+        }   \
+    }
+DEFINST(C_BNEZ,
+0x07, "c.bnez", "todo",
+IntALU, F_CTRL|F_COND|F_DIRJMP,
+DNA, DNA, DNA, 
+    DNA, DGPR(RS1_C_x8), DNA, DNA)
+
+
+CONNECT(C1_16SP_LINK)
+
+#define C_ADDI16SP_IMPL \
+    {   \
+        if(IMM_C_16SP == NA)    \
+            DECLARE_FAULT(md_fault_break);  \
+        SET_GPR(MD_REG_SP, GPR(MD_REG_SP) + SEXT_TO(IMM_C_16SP, 10, 64));  \
+    }
+DEFINST(C_ADDI16SP,
+0x02, "c.addi16sp", "todo",
+IntALU, F_ICOMP|F_IMM,
+DGPR(MD_REG_SP), DNA, DNA,
+    DNA, DGPR(MD_REG_SP), DNA, DNA)
+
+#define C_LUI_IMPL \
+    {   \
+        if((RS1_RD_C_x32 == MD_REG_ZERO) | (RS1_RD_C_x32 == MD_REG_SP) | (UIMM_C == NA))    \
+            DECLARE_FAULT(md_fault_break);  \
+        SET_GPR(RS1_RD_C_x32, SEXT_TO(UIMM_C, 18, 64));    \
+    }
+#define C_LUI_00_IMPL C_LUI_IMPL
+#define C_LUI_01_IMPL C_LUI_IMPL
+#define C_LUI_03_IMPL C_LUI_IMPL
+#define C_LUI_04_IMPL C_LUI_IMPL
+#define C_LUI_05_IMPL C_LUI_IMPL
+#define C_LUI_06_IMPL C_LUI_IMPL
+#define C_LUI_07_IMPL C_LUI_IMPL
+#define C_LUI_08_IMPL C_LUI_IMPL
+#define C_LUI_09_IMPL C_LUI_IMPL
+#define C_LUI_0a_IMPL C_LUI_IMPL
+#define C_LUI_0b_IMPL C_LUI_IMPL
+#define C_LUI_0c_IMPL C_LUI_IMPL
+#define C_LUI_0d_IMPL C_LUI_IMPL
+#define C_LUI_0e_IMPL C_LUI_IMPL
+#define C_LUI_0f_IMPL C_LUI_IMPL
+#define C_LUI_10_IMPL C_LUI_IMPL
+#define C_LUI_11_IMPL C_LUI_IMPL
+#define C_LUI_12_IMPL C_LUI_IMPL
+#define C_LUI_13_IMPL C_LUI_IMPL
+#define C_LUI_14_IMPL C_LUI_IMPL
+#define C_LUI_15_IMPL C_LUI_IMPL
+#define C_LUI_16_IMPL C_LUI_IMPL
+#define C_LUI_17_IMPL C_LUI_IMPL
+#define C_LUI_18_IMPL C_LUI_IMPL
+#define C_LUI_19_IMPL C_LUI_IMPL
+#define C_LUI_1a_IMPL C_LUI_IMPL
+#define C_LUI_1b_IMPL C_LUI_IMPL
+#define C_LUI_1c_IMPL C_LUI_IMPL
+#define C_LUI_1d_IMPL C_LUI_IMPL
+#define C_LUI_1e_IMPL C_LUI_IMPL
+#define C_LUI_1f_IMPL C_LUI_IMPL
+
+#define C_LUI_EXPAND(n) \
+    DEFINST(C_LUI_##n, \
+    0x##n, "c.lui", "todo",   \
+    IntALU, F_ICOMP|F_IMM,  \
+    DGPR(RS1_RD_C_x32), DNA, DNA, \
+        DNA, DNA, DNA, DNA)
+
+C_LUI_EXPAND(00)
+C_LUI_EXPAND(01)
+C_LUI_EXPAND(03)
+C_LUI_EXPAND(04)
+C_LUI_EXPAND(05)
+C_LUI_EXPAND(06)
+C_LUI_EXPAND(07)
+C_LUI_EXPAND(08)
+C_LUI_EXPAND(09)
+C_LUI_EXPAND(0a)
+C_LUI_EXPAND(0b)
+C_LUI_EXPAND(0c)
+C_LUI_EXPAND(0d)
+C_LUI_EXPAND(0e)
+C_LUI_EXPAND(0f)
+C_LUI_EXPAND(10)
+C_LUI_EXPAND(11)
+C_LUI_EXPAND(12)
+C_LUI_EXPAND(13)
+C_LUI_EXPAND(14)
+C_LUI_EXPAND(15)
+C_LUI_EXPAND(16)
+C_LUI_EXPAND(17)
+C_LUI_EXPAND(18)
+C_LUI_EXPAND(19)
+C_LUI_EXPAND(1a)
+C_LUI_EXPAND(1b)
+C_LUI_EXPAND(1c)
+C_LUI_EXPAND(1d)
+C_LUI_EXPAND(1e)
+C_LUI_EXPAND(1f)
+
+CONNECT(C1_LOGI_LINK)
+
+#define C_SRLI64_IMPL \
+    {   \
+        if((RS1_RD_C_x8 == MD_REG_ZERO) | (SHAMT_C == NA)) \
+            DECLARE_FAULT(md_fault_break);  \
+        SET_GPR(RS1_RD_C_x8, GPR(RS1_RD_C_x8) >> SHAMT_C); \
+    }
+DEFINST(C_SRLI64,
+0x00, "c.srli64", "todo",
+IntALU, F_ICOMP,
+DGPR(RS1_RD_C_x8), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x8), DNA, DNA)
+
+#define C_SRAI64_IMPL \
+    {   \
+        if((RS1_RD_C_x8 == MD_REG_ZERO) | (SHAMT_C == NA)) \
+            DECLARE_FAULT(md_fault_break);  \
+        SET_GPR(RS1_RD_C_x8, (ext_signed_t)(GPR(RS1_RD_C_x8)) >> (SHAMT_C)); \
+    }
+DEFINST(C_SRAI64,
+0x01, "c.srai64", "todo",
+IntALU, F_ICOMP,
+DGPR(RS1_RD_C_x8), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x8), DNA, DNA)
+
+#define C_ANDI_IMPL \
+    {   \
+        SET_GPR(RS1_RD_C_x8, GPR(RS1_RD_C_x8) & SEXT_TO(IMM_C_5_4_0, 6, 64)); \
+    }
+DEFINST(C_ANDI,
+0x02, "c.andi", "todo",
+IntALU, F_ICOMP|F_IMM,
+DGPR(RS1_RD_C_x8), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x8), DNA, DNA)
+
+DEFLINK(C1_LOGI_C_LINK, 0x03, "c1_logi_c_link", FUNCT1_C_SHIFT, FUNCT1_C_MASK, NA)
+CONNECT(C1_LOGI_C_LINK)
+DEFLINK(C1_LOGI_C_0_LINK, 0b0, "c1_logi_c_0_link", FUNCT2_2ND_C_SHIFT, FUNCT2_2ND_C_MASK, NA)
+DEFLINK(C1_LOGI_C_1_LINK, 0b1, "c1_logi_c_0_link", FUNCT2_2ND_C_SHIFT, FUNCT2_2ND_C_MASK, NA)
+
+CONNECT(C1_LOGI_C_0_LINK)
+
+#define C_SUB_IMPL \
+    {   \
+        SET_GPR(RS1_RD_C_x8, GPR(RS1_RD_C_x8) - GPR(RS2_C_x8)); \
+    }
+DEFINST(C_SUB,
+0x00, "c.sub", "todo",
+IntALU, F_ICOMP,
+DGPR(RS1_RD_C_x8), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x8), DGPR(RS2_C_x8), DNA)
+
+#define C_XOR_IMPL \
+    {   \
+        SET_GPR(RS1_RD_C_x8, GPR(RS1_RD_C_x8) ^ GPR(RS2_C_x8)); \
+    }
+DEFINST(C_XOR,
+0x01, "c.xor", "todo",
+IntALU, F_ICOMP,
+DGPR(RS1_RD_C_x8), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x8), DGPR(RS2_C_x8), DNA)
+
+#define C_OR_IMPL \
+    {   \
+        SET_GPR(RS1_RD_C_x8, GPR(RS1_RD_C_x8) | GPR(RS2_C_x8)); \
+    }
+DEFINST(C_OR,
+0x02, "c.or", "todo",
+IntALU, F_ICOMP,
+DGPR(RS1_RD_C_x8), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x8), DGPR(RS2_C_x8), DNA)
+
+#define C_AND_IMPL \
+    {   \
+        SET_GPR(RS1_RD_C_x8, GPR(RS1_RD_C_x8) & GPR(RS2_C_x8)); \
+    }
+DEFINST(C_AND,
+0x03, "c.and", "todo",
+IntALU, F_ICOMP,
+DGPR(RS1_RD_C_x8), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x8), DGPR(RS2_C_x8), DNA)
+
+CONNECT(C1_LOGI_C_1_LINK)
+
+#define C_SUBW_IMPL \
+    {   \
+        SET_GPR(RS1_RD_C_x8, SEXT_TO(((GPR(RS1_RD_C_x8) - GPR(RS2_C_x8)) & LOW_MASK), 32, 64)); \
+    }
+DEFINST(C_SUBW,
+0x00, "c.subw", "todo",
+IntALU, F_ICOMP,
+DGPR(RS1_RD_C_x8), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x8), DGPR(RS2_C_x8), DNA
+)
+
+#define C_ADDW_IMPL \
+    {   \
+        SET_GPR(RS1_RD_C_x8, SEXT_TO(((GPR(RS1_RD_C_x8) + GPR(RS2_C_x8)) & LOW_MASK), 32, 64)); \
+    }
+DEFINST(C_ADDW,
+0x01, "c.addw", "todo",
+IntALU, F_ICOMP,
+DGPR(RS1_RD_C_x8), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x8), DGPR(RS2_C_x8), DNA)
+
+CONNECT(C2_LINK)
+
+#define C_SLLI64_IMPL \
+    {   \
+        if((RS1_RD_C_x32 == MD_REG_ZERO) | (SHAMT_C == NA)) \
+            DECLARE_FAULT(md_fault_break);  \
+        SET_GPR(RS1_RD_C_x32, (GPR(RS1_RD_C_x32) << SHAMT_C)); \
+    }
+DEFINST(C_SLLI64,
+0x00, "c.slli64", "todo",
+IntALU, F_ICOMP,
+DGPR(RS1_RD_C_x32), DNA, DNA,
+        DNA, DGPR(RS1_RD_C_x32), DNA, DNA)
+
+#define C_FLDSP_IMPL \
+    {   \
+        sqword_t _result; \
+        enum md_fault_type _fault;  \
+        \
+        _result = READ_QWORD(GPR(MD_REG_SP) + EXT(DIMM_C_R), _fault); /*result EXT?*/\
+        if(_fault != md_fault_none)				\
+            DECLARE_FAULT(_fault);  \
+        SET_FPRD_Q(RD_C_x32, _result);		/*check*/		\
+    }
+DEFINST(C_FLDSP,
+0x01, "c.fldsp", "todo",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DFPR(RD_C_x32), DNA, DNA,
+    DNA, DGPR(MD_REG_SP), DNA, DNA)
+
+#define C_LWSP_IMPL \
+    {   \
+        sword_t _result;    \
+        enum md_fault_type _fault;  \
+        if(RD_C_x32 == MD_REG_ZERO) \
+            DECLARE_FAULT(md_fault_break);  \
+        \
+        _result = READ_WORD(GPR(MD_REG_SP) + (EXT(WIMM_C_R)), _fault);   /* check N##L */\
+        if (_fault != md_fault_none)                \
+          DECLARE_FAULT(_fault);                \
+        SET_GPR(RD_C_x32, (ext_signed_t)(_result)); \
+    }
+DEFINST(C_LWSP,
+0x02, "c.lwsp", "todo",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD_C_x32), DNA, DNA,
+    DNA, DGPR(MD_REG_SP), DNA, DNA)
+
+#define C_LDSP_IMPL \
+    {   \
+        sqword_t _result;    \
+        enum md_fault_type _fault;  \
+        if(RD_C_x32 == MD_REG_ZERO) \
+            DECLARE_FAULT(md_fault_break);  \
+        _result = READ_QWORD(GPR(MD_REG_SP) + (EXT(DIMM_C_R)), _fault);   \
+        if (_fault != md_fault_none)                \
+          DECLARE_FAULT(_fault);                \
+        SET_GPR(RD_C_x32, (ext_signed_t)(_result)); \
+    }
+DEFINST(C_LDSP,
+0x03, "c.ldsp", "todo",
+RdPort, F_MEM|F_LOAD|F_DISP,
+DGPR(RD_C_x32), DNA, DNA,
+        DNA, DGPR(MD_REG_SP), DNA, DNA)
+
+#define C_FSDSP_IMPL \
+    {   \
+        enum md_fault_type _fault;				\
+        md_addr_t _addr = GPR(MD_REG_SP) + EXT(DIMM_C_L);		\
+        WRITE_QWORD(FPRD_Q(RS2_C_x32), _addr, _fault);		\
+        if (_fault != md_fault_none)				\
+            DECLARE_FAULT(_fault);				\
+    }
+DEFINST(C_FSDSP,
+0x05, "c.fsdsp", "todo",
+WrPort, F_MEM|F_STORE|F_DISP,
+DNA, DNA, DNA,
+    DNA, DGPR(MD_REG_SP), DFPR(RS2_C_x32), DNA)
+
+#define C_SWSP_IMPL \
+    {   \
+        sword_t _src;                        \
+        enum md_fault_type _fault;                \
+                                \
+        _src = WORD_MASK & (GPR(RS2_C_x32));        \
+        WRITE_WORD(_src, (GPR(MD_REG_SP) + EXT(WIMM_C_L)),  _fault); /* EXT32 check N##L */  \
+        if (_fault != md_fault_none)                \
+            DECLARE_FAULT(_fault);                \
+    }
+DEFINST(C_SWSP,
+0x06, "c.swsp", "todo",
+WrPort, F_MEM|F_STORE|F_DISP,
+DNA, DNA,  DNA, 
+    DNA, DGPR(MD_REG_SP), DGPR(RS2_C_x32), DNA)
+
+#define C_SDSP_IMPL \
+    {   \
+        sqword_t _src;                        \
+        enum md_fault_type _fault;                \
+                                \
+        _src = (GPR(RS2_C_x32));       \
+        WRITE_QWORD(_src, (GPR(MD_REG_SP) + EXT(DIMM_C_L)),  _fault);   \
+        if (_fault != md_fault_none)                \
+            DECLARE_FAULT(_fault);                \
+    }
+DEFINST(C_SDSP,
+0x07, "c.sdsp", "todo",
+WrPort, F_MEM|F_STORE|F_DISP,
+DNA, DNA,  DNA, 
+    DNA, DGPR(MD_REG_SP), DGPR(RS2_C_x32), DNA)
+
+DEFLINK(C2_JMP_LINK, 0x04, "c2_jmp_link", FUNCT1_C_SHIFT, FUNCT1_C_MASK, NA)
+CONNECT(C2_JMP_LINK)
+
+DEFLINK(C2_JMP_0_LINK, 0x00, "c2_jmp_0_link", RS2_C_SHIFT, RS2_C_MASK, NA)
+DEFLINK(C2_JMP_1_LINK, 0x01, "c2_jmp_1_link", RS2_C_SHIFT, RS2_C_MASK, NA)
+
+CONNECT(C2_JMP_0_LINK)
+
+#define C_JR_IMPL \
+    {   \
+        if(RS2_C_x32 != MD_REG_ZERO)    \
+            DECLARE_FAULT(md_fault_break);  \         
+        SET_TPC(GPR(RS1_C_x32));    \
+        SET_NPC(GPR(RS1_C_x32));    \
+        CtrlInstTaken(true); \
+    }
+DEFINST(C_JR,
+0x00, "c.jr", "todo",
+IntALU, F_CTRL|F_UNCOND|F_DIRJMP,
+DNA, DNA, DNA,
+        DNA, DGPR(RS1_C_x32), DGPR(RS2_C_x32), DNA)
+
+#define C_MV_IMPL \
+    {   \
+        SET_GPR(RS1_RD_C_x32, GPR(RS2_C_x32));   \
+    }
+#define C_MV_01_IMPL C_MV_IMPL
+#define C_MV_02_IMPL C_MV_IMPL
+#define C_MV_03_IMPL C_MV_IMPL
+#define C_MV_04_IMPL C_MV_IMPL
+#define C_MV_05_IMPL C_MV_IMPL
+#define C_MV_06_IMPL C_MV_IMPL
+#define C_MV_07_IMPL C_MV_IMPL
+#define C_MV_08_IMPL C_MV_IMPL
+#define C_MV_09_IMPL C_MV_IMPL
+#define C_MV_0a_IMPL C_MV_IMPL
+#define C_MV_0b_IMPL C_MV_IMPL
+#define C_MV_0c_IMPL C_MV_IMPL
+#define C_MV_0d_IMPL C_MV_IMPL
+#define C_MV_0e_IMPL C_MV_IMPL
+#define C_MV_0f_IMPL C_MV_IMPL
+#define C_MV_10_IMPL C_MV_IMPL
+#define C_MV_11_IMPL C_MV_IMPL
+#define C_MV_12_IMPL C_MV_IMPL
+#define C_MV_13_IMPL C_MV_IMPL
+#define C_MV_14_IMPL C_MV_IMPL
+#define C_MV_15_IMPL C_MV_IMPL
+#define C_MV_16_IMPL C_MV_IMPL
+#define C_MV_17_IMPL C_MV_IMPL
+#define C_MV_18_IMPL C_MV_IMPL
+#define C_MV_19_IMPL C_MV_IMPL
+#define C_MV_1a_IMPL C_MV_IMPL
+#define C_MV_1b_IMPL C_MV_IMPL
+#define C_MV_1c_IMPL C_MV_IMPL
+#define C_MV_1d_IMPL C_MV_IMPL
+#define C_MV_1e_IMPL C_MV_IMPL
+#define C_MV_1f_IMPL C_MV_IMPL
+
+#define C_MV_EXPAND(n)  \
+    DEFINST(C_MV_##n,   \
+    0x##n, "c.mv", "todo",  \
+    IntALU, F_ICOMP|F_IMM,  \
+    DGPR(RS1_RD_C_x32), DNA, DNA, \
+        DNA, DGPR(RS2_C_x32), DNA, DNA)
+
+C_MV_EXPAND(01)
+C_MV_EXPAND(02)
+C_MV_EXPAND(03)
+C_MV_EXPAND(04)
+C_MV_EXPAND(05)
+C_MV_EXPAND(06)
+C_MV_EXPAND(07)
+C_MV_EXPAND(08)
+C_MV_EXPAND(09)
+C_MV_EXPAND(0a)
+C_MV_EXPAND(0b)
+C_MV_EXPAND(0c)
+C_MV_EXPAND(0d)
+C_MV_EXPAND(0e)
+C_MV_EXPAND(0f)
+C_MV_EXPAND(10)
+C_MV_EXPAND(11)
+C_MV_EXPAND(12)
+C_MV_EXPAND(13)
+C_MV_EXPAND(14)
+C_MV_EXPAND(15)
+C_MV_EXPAND(16)
+C_MV_EXPAND(17)
+C_MV_EXPAND(18)
+C_MV_EXPAND(19)
+C_MV_EXPAND(1a)
+C_MV_EXPAND(1b)
+C_MV_EXPAND(1c)
+C_MV_EXPAND(1d)
+C_MV_EXPAND(1e)
+C_MV_EXPAND(1f)
+
+CONNECT(C2_JMP_1_LINK)
+DEFLINK(C2_JMP_1_EBRK_LINK, 0x00, "c2_jmp_1_ebrk_link", RS1_C_SHIFT, RS1_C_MASK, NA)
+
+#define C_ADD_IMPL \
+    {   \
+        if((RS1_RD_C_x32 == MD_REG_ZERO) | (RS2_C_x32 == MD_REG_ZERO))  \
+            DECLARE_FAULT(md_fault_break);  \
+        SET_GPR(RS1_RD_C_x32, (GPR(RS1_RD_C_x32) + GPR(RS2_C_x32))); \
+    }
+#define C_ADD_01_IMPL C_ADD_IMPL
+#define C_ADD_02_IMPL C_ADD_IMPL
+#define C_ADD_03_IMPL C_ADD_IMPL
+#define C_ADD_04_IMPL C_ADD_IMPL
+#define C_ADD_05_IMPL C_ADD_IMPL
+#define C_ADD_06_IMPL C_ADD_IMPL
+#define C_ADD_07_IMPL C_ADD_IMPL
+#define C_ADD_08_IMPL C_ADD_IMPL
+#define C_ADD_09_IMPL C_ADD_IMPL
+#define C_ADD_0a_IMPL C_ADD_IMPL
+#define C_ADD_0b_IMPL C_ADD_IMPL
+#define C_ADD_0c_IMPL C_ADD_IMPL
+#define C_ADD_0d_IMPL C_ADD_IMPL
+#define C_ADD_0e_IMPL C_ADD_IMPL
+#define C_ADD_0f_IMPL C_ADD_IMPL
+#define C_ADD_10_IMPL C_ADD_IMPL
+#define C_ADD_11_IMPL C_ADD_IMPL
+#define C_ADD_12_IMPL C_ADD_IMPL
+#define C_ADD_13_IMPL C_ADD_IMPL
+#define C_ADD_14_IMPL C_ADD_IMPL
+#define C_ADD_15_IMPL C_ADD_IMPL
+#define C_ADD_16_IMPL C_ADD_IMPL
+#define C_ADD_17_IMPL C_ADD_IMPL
+#define C_ADD_18_IMPL C_ADD_IMPL
+#define C_ADD_19_IMPL C_ADD_IMPL
+#define C_ADD_1a_IMPL C_ADD_IMPL
+#define C_ADD_1b_IMPL C_ADD_IMPL
+#define C_ADD_1c_IMPL C_ADD_IMPL
+#define C_ADD_1d_IMPL C_ADD_IMPL
+#define C_ADD_1e_IMPL C_ADD_IMPL
+#define C_ADD_1f_IMPL C_ADD_IMPL
+
+#define C_ADD_EXPAND(n) \
+    DEFINST(C_ADD_##n,  \
+    0x##n, "c.add", "todo",  \
+    IntALU, F_ICOMP,    \
+    DGPR(RS1_RD_C_x32), DNA, DNA, \
+        DNA, DGPR(RS1_RD_C_x32), DGPR(RS2_C_x32), DNA) \
+
+C_ADD_EXPAND(01)
+C_ADD_EXPAND(02)
+C_ADD_EXPAND(03)
+C_ADD_EXPAND(04)
+C_ADD_EXPAND(05)
+C_ADD_EXPAND(06)
+C_ADD_EXPAND(07)
+C_ADD_EXPAND(08)
+C_ADD_EXPAND(09)
+C_ADD_EXPAND(0a)
+C_ADD_EXPAND(0b)
+C_ADD_EXPAND(0c)
+C_ADD_EXPAND(0d)
+C_ADD_EXPAND(0e)
+C_ADD_EXPAND(0f)
+C_ADD_EXPAND(10)
+C_ADD_EXPAND(11)
+C_ADD_EXPAND(12)
+C_ADD_EXPAND(13)
+C_ADD_EXPAND(14)
+C_ADD_EXPAND(15)
+C_ADD_EXPAND(16)
+C_ADD_EXPAND(17)
+C_ADD_EXPAND(18)
+C_ADD_EXPAND(19)
+C_ADD_EXPAND(1a)
+C_ADD_EXPAND(1b)
+C_ADD_EXPAND(1c)
+C_ADD_EXPAND(1d)
+C_ADD_EXPAND(1e)
+C_ADD_EXPAND(1f)
+
+CONNECT(C2_JMP_1_EBRK_LINK)
+DEFLINK(C2_JMP_1_EB_JL_LINK, 0x00, "c2_jmp_1_eb_jl_link", RS1_C_2ND_SHIFT, RS1_C_2ND_MASK, NA)
+CONNECT(C2_JMP_1_EB_JL_LINK)
+
+#define C_EBREAK_IMPL \
+    {   \
+        SYSCALL(93);\
+    }
+DEFINST(C_EBREAK,
+0x00, "c.ebreak", "todo",
+NA, F_TRAP,
+DNA, DNA, DNA,
+    DNA, DNA, DNA, DNA)
+
+#define C_JALR_IMPL \
+    {   \
+        qword_t _rd = CPC + 2;  \
+        if(RS2_C_x32 != MD_REG_ZERO)    \
+            DECLARE_FAULT(md_fault_break);  \
+        SET_TPC(GPR(RS1_C_x32));    \
+        SET_NPC(GPR(RS1_C_x32));    \
+        SET_GPR(MD_REG_RA, _rd);    \
+        CtrlInstTaken(true); \
+    }
+#define C_JALR_01_IMPL C_JALR_IMPL
+#define C_JALR_02_IMPL C_JALR_IMPL
+#define C_JALR_03_IMPL C_JALR_IMPL
+#define C_JALR_04_IMPL C_JALR_IMPL
+#define C_JALR_05_IMPL C_JALR_IMPL
+#define C_JALR_06_IMPL C_JALR_IMPL
+#define C_JALR_07_IMPL C_JALR_IMPL
+#define C_JALR_08_IMPL C_JALR_IMPL
+#define C_JALR_09_IMPL C_JALR_IMPL
+#define C_JALR_0a_IMPL C_JALR_IMPL
+#define C_JALR_0b_IMPL C_JALR_IMPL
+#define C_JALR_0c_IMPL C_JALR_IMPL
+#define C_JALR_0d_IMPL C_JALR_IMPL
+#define C_JALR_0e_IMPL C_JALR_IMPL
+#define C_JALR_0f_IMPL C_JALR_IMPL
+#define C_JALR_10_IMPL C_JALR_IMPL
+#define C_JALR_11_IMPL C_JALR_IMPL
+#define C_JALR_12_IMPL C_JALR_IMPL
+#define C_JALR_13_IMPL C_JALR_IMPL
+#define C_JALR_14_IMPL C_JALR_IMPL
+#define C_JALR_15_IMPL C_JALR_IMPL
+#define C_JALR_16_IMPL C_JALR_IMPL
+#define C_JALR_17_IMPL C_JALR_IMPL
+#define C_JALR_18_IMPL C_JALR_IMPL
+#define C_JALR_19_IMPL C_JALR_IMPL
+#define C_JALR_1a_IMPL C_JALR_IMPL
+#define C_JALR_1b_IMPL C_JALR_IMPL
+#define C_JALR_1c_IMPL C_JALR_IMPL
+#define C_JALR_1d_IMPL C_JALR_IMPL
+#define C_JALR_1e_IMPL C_JALR_IMPL
+#define C_JALR_1f_IMPL C_JALR_IMPL
+
+#define C_JALR_EXPAND(n)    \
+    DEFINST(C_JALR_##n, \
+    0x##n, "c.jalr", "todo", \
+    IntALU, F_CTRL|F_UNCOND|F_INDIRJMP, \
+    DGPR(MD_REG_RA), DNA, DNA,  \
+        DNA, DGPR(RS1_C_x32), DNA, DNA)
+
+C_JALR_EXPAND(01)
+C_JALR_EXPAND(02)
+C_JALR_EXPAND(03)
+C_JALR_EXPAND(04)
+C_JALR_EXPAND(05)
+C_JALR_EXPAND(06)
+C_JALR_EXPAND(07)
+C_JALR_EXPAND(08)
+C_JALR_EXPAND(09)
+C_JALR_EXPAND(0a)
+C_JALR_EXPAND(0b)
+C_JALR_EXPAND(0c)
+C_JALR_EXPAND(0d)
+C_JALR_EXPAND(0e)
+C_JALR_EXPAND(0f)
+C_JALR_EXPAND(10)
+C_JALR_EXPAND(11)
+C_JALR_EXPAND(12)
+C_JALR_EXPAND(13)
+C_JALR_EXPAND(14)
+C_JALR_EXPAND(15)
+C_JALR_EXPAND(16)
+C_JALR_EXPAND(17)
+C_JALR_EXPAND(18)
+C_JALR_EXPAND(19)
+C_JALR_EXPAND(1a)
+C_JALR_EXPAND(1b)
+C_JALR_EXPAND(1c)
+C_JALR_EXPAND(1d)
+C_JALR_EXPAND(1e)
+C_JALR_EXPAND(1f)
+
+#endif /* RV64C */
+
+/* clean up all definitions */
+#undef LUI_IMPL
+#undef AUIPC_IMPL
+#undef JAL_IMPL
+#undef JALR_IMPL
+#undef BEQ_IMPL
+#undef BNE_IMPL
+#undef BLT_IMPL
+#undef BGE_IMPL
+#undef BLTU_IMPL
+#undef BGEU_IMPL
+#undef LB_IMPL
+#undef LH_IMPL
+#undef LW_IMPL
+#undef LWU_IMPL
+#undef LD_IMPL
+#undef LBU_IMPL
+#undef LHU_IMPL
+#undef SB_IMPL
+#undef SH_IMPL
+#undef SW_IMPL
+#undef SD_IMPL
+#undef ADDI_IMPL
+
+#undef ADDIW_IMPL
+#undef SLLIW_IMPL
+#undef SRLIW_IMPL
+#undef SRAIW_IMPL
+
+#undef SLTI_IMPL
+#undef SLTIU_IMPL
+#undef XORI_IMPL
+#undef ORI_IMPL
+#undef ANDI_IMPL
+#undef SRLI_IMPL
+#undef SRAI_IMPL
+#undef SLL_IMPL
+#undef SLT_IMPL
+#undef SLTU_IMPL
+#undef XOR_IMPL
+#undef OR_IMPL
+#undef AND_IMPL
+#undef ADD_IMPL
+#undef ADDW_IMPL
+#undef SUB_IMPL
+#undef SUBW_IMPL
+#undef SRL_IMPL
+#undef SRLW_IMPL
+#undef SRA_IMPL
+#undef SRAW_IMPL
+#undef FENCE_IMPL
+#undef FENCE_I_IMPL
+#undef CSRRW_IMPL
+#undef CSRRS_IMPL
+#undef CSRRC_IMPL
+#undef CSRRWI_IMPL
+#undef CSRRSI_IMPL
+#undef CSRRCI_IMPL
+#undef ECALL_IMPL
+#undef EBREAK_IMPL
+
+
+#ifdef RV64M
+
+#undef MUL_IMPL
+#undef MULW_IMPL
+#undef MULH_IMPL
+#undef MULHSU_IMPL
+#undef MULHU_IMPL
+#undef DIV_IMPL
+#undef DIVW_IMPL
+#undef DIVU_IMPL
+#undef DIVUW_IMPL
+#undef REM_IMPL
+#undef REMW_IMPL
+#undef REMU_IMPL
+#undef REMUW_IMPL
+
+#endif // RV64M
+
+
+#ifdef RV64A
+
+#undef LR_W_IMPL
+#undef SC_W_IMPL
+#undef AMOSWAP_W_IMPL
+#undef AMOADD_W_IMPL 
+#undef AMOXOR_W_IMPL
+#undef AMOAND_W_IMPL 
+#undef AMOOR_W_IMPL 
+#undef AMOMIN_W_IMPL 
+#undef AMOMAX_W_IMPL 
+#undef AMOMINU_W_IMPL 
+#undef AMOMAXU_W_IMPL
+
+#undef LR_D_IMPL
+#undef SC_D_IMPL
+#undef AMOSWAP_D_IMPL
+#undef AMOADD_D_IMPL
+#undef AMOXOR_D_IMPL
+#undef AMOAND_D_IMPL
+#undef AMOOR_D_IMPL
+#undef AMOMIN_D_IMPL
+#undef AMOMAX_D_IMPL
+#undef AMOMINU_D_IMPL
+#undef AMOMAXU_D_IMPL
+#endif //RV64A
+
+#ifdef RV64F
+
+#undef FLW_IMPL
+#undef FSW_IMPL
+#undef FMADD_S_IMPL
+#undef FMSUB_S_IMPL 
+#undef FNMSUB_S_IMPL
+#undef FNMADD_S_IMPL 
+#undef FADD_S_IMPL 
+#undef FSUB_S_IMPL 
+#undef FMUL_S_IMPL 
+#undef FDIV_S_IMPL 
+#undef FSQRT_S_IMPL
+#undef FSGNJ_S_IMPL 
+#undef FSGNJN_S_IMPL 
+#undef FSGNJX_S_IMPL 
+#undef FMIN_S_IMPL 
+#undef FMAX_S_IMPL
+#undef FCVT_W_S_IMPL
+#undef FCVT_WU_S_IMPL
+#undef FMV_X_W_IMPL
+#undef FEQ_S_IMPL
+#undef FLT_S_IMPL
+#undef FLE_S_IMPL
+#undef FCLASS_S_IMPL
+#undef FCVT_S_W_IMPL
+#undef FCVT_S_WU_IMPL
+#undef FMV_W_X_IMPL
+#undef FCVT_S_L_IMPL
+#undef FCVT_S_LU_IMPL
+#undef FCVT_L_S_IMPL
+#undef FCVT_LU_S_IMPL
+#endif //RV64F
+
+#ifdef RV64D
+#undef FLD_IMPL
+#undef FSD_IMPL
+#undef FMADD_D_IMPL
+#undef FMSUB_D_IMPL
+#undef FNMSUB_D_IMPL
+#undef FNMADD_D_IMPL 
+#undef FADD_D_IMPL 
+#undef FSUB_D_IMPL 
+#undef FMUL_D_IMPL 
+#undef FDIV_D_IMPL 
+#undef FSQRT_D_IMPL
+#undef FSGNJ_D_IMPL 
+#undef FSGNJN_D_IMPL 
+#undef FSGNJX_D_IMPL 
+#undef FMIN_D_IMPL 
+#undef FMAX_D_IMPL
+#undef FCVT_S_D_IMPL
+#undef FCVT_D_S_IMPL
+#undef FEQ_D_IMPL
+#undef FLT_D_IMPL
+#undef FLE_D_IMPL
+#undef FCLASS_D_IMPL
+#undef FCVT_W_D_IMPL
+#undef FCVT_WU_D_IMPL
+#undef FCVT_D_W_IMPL
+#undef FCVT_D_WU_IMPL
+
+#undef FMV_D_X_IMPL
+#undef FCVT_L_D_IMPL
+#undef FCVT_LU_D_IMPL
+#undef FCVT_D_L_IMPL
+#undef FCVT_D_LU_IMPL
+#undef FMV_X_D_IMPL
+#endif //RV64D
+
+#ifdef RV64C
+#undef C_ADDI4SPN_IMPL
+#undef C_FLD_IMPL
+#undef C_LW_IMPL
+#undef C_LD_IMPL
+#undef C_FSD_IMPL
+#undef C_SW_IMPL 
+#undef C_SD_IMPL
+
+#undef C_ADDI_IMPL
+#undef C_ADDIW_IMPL
+#undef C_LI_IMPL
+#undef C_J_IMPL
+#undef C_BEQZ_IMPL
+#undef C_BNEZ_IMPL
+#undef C_LUI_IMPL
+#undef C_ADDI16SP_IMPL
+#undef C_SRLI64_IMPL
+#undef C_SRAI64_IMPL
+#undef C_ANDI_IMPL
+#undef C_SUB_IMPL
+#undef C_XOR_IMPL
+#undef C_OR_IMPL
+#undef C_AND_IMPL
+#undef C_SUBW_IMPL
+#undef C_ADDW_IMPL
+
+#undef C_SLLI64_IMPL
+#undef C_FLDSP_IMPL
+#undef C_LWSP_IMPL
+#undef C_LDSP_IMPL
+#undef C_FSDSP_IMPL
+#undef C_SWSP_IMPL
+#undef C_SDSP_IMPL
+#undef C_MV_IMPL
+#undef C_JR_IMPL
+#undef C_ADD_IMPL
+#undef C_JALR_IMPL
+#undef C_EBREAK_IMPL
+#endif //RV64C
+
+#undef DEFINST
+#undef DEFLINK
+#undef CONNECT

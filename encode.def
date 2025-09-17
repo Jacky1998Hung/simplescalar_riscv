@@ -1,0 +1,152 @@
+/* use for inst order of macro fusion */
+#define FIRST 0
+#define SECOND 1
+#define THIRD 2
+
+/* opcode enum value. Modifying machine.def define order 
+    may cause this encoding to malfunction. */
+#define LUI_OP 1
+#define AUIPC_OP 2
+#define JALR_OP 4
+#define LW_OP 39
+#define LD_OP 40
+#define ADDIW_OP 48
+#define ADDI_OP 53
+#define ANDI_OP 58
+#define SLLI_OP 59
+#define SRLI_OP 61
+#define ADD_OP 63
+#define MUL_OP 96
+#define MULH_OP 97
+#define MULHSU_OP 98
+#define MULHU_OP 99
+#define DIV_OP 100
+#define DIVU_OP 101
+#define REM_OP 102
+#define REMU_OP 103
+
+#define C_LW_OP 206
+#define C_LD_OP 207
+#define C_ADDI_OP 211
+#define C_ADDIW_OP 212
+#define C_LI_OP 213
+#define C_SRLI64_OP 251
+#define C_ANDI_OP 253
+#define C_SLLI64_OP 263
+// c.lui 220~250
+#define C_LUI_START 220
+#define C_LUI_END 250
+#define C_LUI_OP 220
+// c.jalr 339~369
+#define C_JALR_START 339
+#define C_JALR_END 369
+#define C_JALR_OP 339
+// c.add 306~336
+#define C_ADD_START 306
+#define C_ADD_END 336
+#define C_ADD_OP 306
+
+/* ***** CSR relatvie encode blow ***** */
+/* mstatus(0x300) bit field */
+#define WPRI (0x7ffff900fe000016) /* separate fields */
+#define SIE (1ULL << 1)
+#define MIE (1ULL << 3)
+#define SPIE (1ULL << 5)
+#define UBE (1ULL << 6)
+#define MPIE (1ULL << 7)
+#define SPP (1ULL << 8)
+#define VS (0x11 << 9)
+#define MPP (0x11 << 11)
+#define FS (0x11 << 13)
+#define XS (0x11 << 15)
+#define MPRV (1ULL << 17)
+#define SUM (1ULL << 18)
+#define MXR (1ULL << 19)
+#define TVM (1ULL << 20)
+#define TW (1ULL << 21)
+#define TSR (1ULL << 22)
+#define SPELP (1ULL << 23)
+#define SDT (1ULL << 24)
+#define UXL (0x11 << 32)
+#define SXL (0x11 << 34)
+#define SBE (1ULL << 36)
+#define MBE (1ULL << 37)
+#define GVA (1ULL << 38)
+#define MPV (1ULL << 39)
+#define MPELP (1ULL << 41)
+#define MDT (1ULL << 42)
+/* 'SD' macro renamed to avoid conflict 
+with the 'sd' instruction defined in machine.def */
+#define SD_BIT (1ULL << 63)
+/* ==================================================== */
+
+/* misa(0x301) bit field */
+#define EXT_A 1
+#define EXT_B (1 << 1)
+#define EXT_C (1 << 2)
+#define EXT_D (1 << 3)
+#define EXT_E (1 << 4)
+#define EXT_F (1 << 5)
+#define EXT_G (1 << 6)
+#define EXT_H (1 << 7)
+#define EXT_I (1 << 8)
+#define EXT_J (1 << 9)
+#define EXT_K (1 << 10)
+#define EXT_L (1 << 11)
+#define EXT_M (1 << 12)
+#define EXT_N (1 << 13)
+#define EXT_O (1 << 14)
+#define EXT_P (1 << 15)
+#define EXT_Q (1 << 16)
+#define EXT_R (1 << 17)
+#define EXT_S (1 << 18)
+#define EXT_T (1 << 19)
+#define EXT_U (1 << 20)
+#define EXT_V (1 << 21)
+#define EXT_W (1 << 22)
+#define EXT_X (1 << 23)
+#define EXT_Y (1 << 24)
+#define EXT_Z (1 << 25)
+
+/* fmt(target data ForMaT) */
+#define FMT_SINGLE 0x0
+#define FMT_DOUBLE 0x1
+#define FMT_RESERVED_010 0x2
+#define FMT QUARD 0x3
+
+/* fflags(0x001) bit field */
+#define NV (1 << 4)
+#define DZ (1 << 3)
+#define OF (1 << 2)
+#define UF (1 << 1)
+#define NX (1)
+
+/* frm(0x002) bit field */
+#define RNE 0x0
+#define RTZ 0x1
+#define RDN 0x2
+#define RUP 0x3
+#define RMM 0x4
+#define RESERVED_101 0x5
+#define RESERVED_110 0x6
+#define DYN 0x7
+
+/* Unprivileged Floating-Point CSRs */
+#define FFLAGS 0x001
+#define FRM 0x002
+#define FCSR 0x003
+
+/* Machine Information Registers */
+#define MHARTID 0xf14
+
+/* Machine Trap Setup */
+#define MSTATUS 0x300
+#define MISA 0x301
+
+/* Machine Trap Handling */
+#define MEPC 0x341
+
+/* CSR address about S-mode */
+#define SEPC 0x141
+
+

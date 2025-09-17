@@ -1,0 +1,1005 @@
+sim-fast: SimpleScalar/RISCV Tool Set version 3.0 of August, 2003.
+Copyright (c) 1994-2003 by Todd M. Austin, Ph.D. and SimpleScalar, LLC.
+All Rights Reserved. This version of SimpleScalar is licensed for academic
+non-commercial use.  No portion of this work may be used by any commercial
+entity, or for any commercial purpose, without the prior written permission
+of SimpleScalar, LLC (info@simplescalar.com).
+
+debug: entry!!!10090
+ [ld_load_prog:loader.c, line 261]
+debug: number of sections in execution = 13
+ [ld_load_prog:loader.c, line 263]
+debug: offset to section header table = 4424
+ [ld_load_prog:loader.c, line 264]
+debug: size of string table = 112 [ld_load_prog:loader.c, line 286]
+debug: type of section = 3 [ld_load_prog:loader.c, line 287]
+debug: offset of string table in file = 4310 [ld_load_prog:loader.c, line 288]
+debug: processing 13 sections in `long_2'... [ld_load_prog:loader.c, line 290]
+debug: processing section `'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000000 [ld_load_prog:loader.c, line 305]
+debug:   section type = 0 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00000000 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 0 [ld_load_prog:loader.c, line 308]
+debug:   section size = 0 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 0 [ld_load_prog:loader.c, line 312]
+debug: processing section `.text'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000006 [ld_load_prog:loader.c, line 305]
+debug:   section type = 1 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00010074 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 116 [ld_load_prog:loader.c, line 308]
+debug:   section size = 1420 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 0 [ld_load_prog:loader.c, line 312]
+debug:   processing section `.text'... [ld_load_prog:loader.c, line 319]
+debug:   loading section `.text'... [ld_load_prog:loader.c, line 323]
+debug: updating text size... [ld_load_prog:loader.c, line 345]
+debug: processing section `.eh_frame'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000003 [ld_load_prog:loader.c, line 305]
+debug:   section type = 1 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00011600 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 1536 [ld_load_prog:loader.c, line 308]
+debug:   section size = 4 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 0 [ld_load_prog:loader.c, line 312]
+debug:   processing section `.eh_frame'... [ld_load_prog:loader.c, line 319]
+debug:   loading section `.eh_frame'... [ld_load_prog:loader.c, line 323]
+debug: updating data size... [ld_load_prog:loader.c, line 353]
+debug: processing section `.init_array'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000003 [ld_load_prog:loader.c, line 305]
+debug:   section type = 14 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00011604 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 1540 [ld_load_prog:loader.c, line 308]
+debug:   section size = 8 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 4 [ld_load_prog:loader.c, line 312]
+debug:   processing section `.init_array'... [ld_load_prog:loader.c, line 319]
+debug:   loading section `.init_array'... [ld_load_prog:loader.c, line 323]
+debug: updating data size... [ld_load_prog:loader.c, line 353]
+debug: processing section `.fini_array'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000003 [ld_load_prog:loader.c, line 305]
+debug:   section type = 15 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x0001160c [ld_load_prog:loader.c, line 307]
+debug:   section offset = 1548 [ld_load_prog:loader.c, line 308]
+debug:   section size = 4 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 4 [ld_load_prog:loader.c, line 312]
+debug:   processing section `.fini_array'... [ld_load_prog:loader.c, line 319]
+debug:   loading section `.fini_array'... [ld_load_prog:loader.c, line 323]
+debug: updating data size... [ld_load_prog:loader.c, line 353]
+debug: processing section `.data'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000003 [ld_load_prog:loader.c, line 305]
+debug:   section type = 1 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00011610 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 1552 [ld_load_prog:loader.c, line 308]
+debug:   section size = 1064 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 0 [ld_load_prog:loader.c, line 312]
+debug:   processing section `.data'... [ld_load_prog:loader.c, line 319]
+debug:   loading section `.data'... [ld_load_prog:loader.c, line 323]
+debug: updating data size... [ld_load_prog:loader.c, line 353]
+debug: processing section `.sdata'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000003 [ld_load_prog:loader.c, line 305]
+debug:   section type = 1 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00011a38 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 2616 [ld_load_prog:loader.c, line 308]
+debug:   section size = 12 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 0 [ld_load_prog:loader.c, line 312]
+debug:   processing section `.sdata'... [ld_load_prog:loader.c, line 319]
+debug:   loading section `.sdata'... [ld_load_prog:loader.c, line 323]
+debug: updating data size... [ld_load_prog:loader.c, line 353]
+debug: processing section `.bss'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000003 [ld_load_prog:loader.c, line 305]
+debug:   section type = 8 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00011a44 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 2628 [ld_load_prog:loader.c, line 308]
+debug:   section size = 28 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 0 [ld_load_prog:loader.c, line 312]
+debug:   processing section `.bss'... [ld_load_prog:loader.c, line 319]
+debug: updating data size... [ld_load_prog:loader.c, line 353]
+debug: processing section `.comment'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000030 [ld_load_prog:loader.c, line 305]
+debug:   section type = 1 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00000000 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 2628 [ld_load_prog:loader.c, line 308]
+debug:   section size = 17 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 1 [ld_load_prog:loader.c, line 312]
+debug: processing section `.riscv.attributes'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000000 [ld_load_prog:loader.c, line 305]
+debug:   section type = 1879048195 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00000000 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 2645 [ld_load_prog:loader.c, line 308]
+debug:   section size = 26 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 0 [ld_load_prog:loader.c, line 312]
+debug: processing section `.symtab'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000000 [ld_load_prog:loader.c, line 305]
+debug:   section type = 2 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00000000 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 2672 [ld_load_prog:loader.c, line 308]
+debug:   section size = 1008 [ld_load_prog:loader.c, line 309]
+debug:   section link = 11 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 41 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 16 [ld_load_prog:loader.c, line 312]
+debug: processing section `.strtab'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000000 [ld_load_prog:loader.c, line 305]
+debug:   section type = 3 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00000000 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 3680 [ld_load_prog:loader.c, line 308]
+debug:   section size = 630 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 0 [ld_load_prog:loader.c, line 312]
+debug: processing section `.shstrtab'... [ld_load_prog:loader.c, line 304]
+debug:   section flags = 0x00000000 [ld_load_prog:loader.c, line 305]
+debug:   section type = 3 [ld_load_prog:loader.c, line 306]
+debug:   section address = 0x00000000 [ld_load_prog:loader.c, line 307]
+debug:   section offset = 4310 [ld_load_prog:loader.c, line 308]
+debug:   section size = 112 [ld_load_prog:loader.c, line 309]
+debug:   section link = 0 [ld_load_prog:loader.c, line 310]
+debug:   section extra info = 0 [ld_load_prog:loader.c, line 311]
+debug:   section entry size = 0 [ld_load_prog:loader.c, line 312]
+debug: ld_text_base: 0x00010074  ld_text_size: 0x0000058c [ld_load_prog:loader.c, line 459]
+debug: ld_data_base: 0x00011600  ld_data_size: 0x00000460 [ld_load_prog:loader.c, line 461]
+debug: ld_stack_base: 0xc0000000  ld_stack_size: 0x00004000 [ld_load_prog:loader.c, line 463]
+debug: ld_prog_entry: 0x00010090 [ld_load_prog:loader.c, line 464]
+0x000102c0: 00f77793
+0x000102c4: 0a079063
+0x000102c8: 08059263
+0x000102cc: ff067693
+0x000102d0: 00f67613
+0x000102d4: 00e686b3
+0x000102d8: 00b72023
+0x000102dc: 00b72223
+0x000102e0: 00b72423
+sim: command line: ../../sim-fast -d long_2 
+
+sim: simulation started @ Fri Nov 15 08:02:57 2019, options follow:
+
+sim-fast: This simulator implements a very fast functional simulator.  This
+functional simulator implementation is much more difficult to digest than
+the simpler, cleaner sim-safe functional simulator.  By default, this
+simulator performs no instruction error checking, as a result, any
+instruction errors will manifest as simulator execution errors, possibly
+causing sim-fast to execute incorrectly or dump core.  Such is the
+price we pay for speed!!!!
+
+# -config                     # load configuration from a file
+# -dumpconfig                 # dump configuration to a file
+# -h                    false # print help message    
+# -v                    false # verbose operation     
+# -d                     true # enable debug message  
+# -i                    false # start in Dlite debugger
+-seed                       1 # random number generator seed (0 for timer seed)
+# -q                    false # initialize and terminate immediately
+# -chkpt               <null> # restore EIO trace execution from <fname>
+# -redir:sim           <null> # redirect simulator output to file (non-interactive only)
+# -redir:prog          <null> # redirect simulated program output to file
+-nice                       0 # simulator scheduling priority
+
+sim: ** starting *fast* functional simulation **
+debug: instruction 10090
+ [sim_main:sim-fast.c, line 456]
+debug: auipc [sim_main:machine.def, line 21]
+debug: instruction 10094
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10098
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 1009c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 100a0
+ [sim_main:sim-fast.c, line 456]
+debug: sub [sim_main:machine.def, line 556]
+debug: instruction 100a4
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 100a8
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 102b4
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 102b8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 102bc
+ [sim_main:sim-fast.c, line 456]
+debug: bgeu [sim_main:machine.def, line 174]
+debug: instruction 102c0
+ [sim_main:sim-fast.c, line 456]
+debug: andi [sim_main:machine.def, line 395]
+debug: instruction 102c4
+ [sim_main:sim-fast.c, line 456]
+debug: bne [sim_main:machine.def, line 131]
+debug: instruction 10364
+ [sim_main:sim-fast.c, line 456]
+debug: slli [sim_main:machine.def, line 403]
+debug: instruction 10368
+ [sim_main:sim-fast.c, line 456]
+debug: auipc [sim_main:machine.def, line 21]
+debug: instruction 1036c
+ [sim_main:sim-fast.c, line 456]
+debug: add [sim_main:machine.def, line 478]
+debug: instruction 10370
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10374
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 10318
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 1031c
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 10320
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 10324
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 10328
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 1032c
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 10330
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 10334
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 10338
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 1033c
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 10340
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 10344
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 10348
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 10378
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 1037c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10380
+ [sim_main:sim-fast.c, line 456]
+debug: sub [sim_main:machine.def, line 556]
+debug: instruction 10384
+ [sim_main:sim-fast.c, line 456]
+debug: add [sim_main:machine.def, line 478]
+debug: instruction 10388
+ [sim_main:sim-fast.c, line 456]
+debug: bgeu [sim_main:machine.def, line 174]
+debug: instruction 1038c
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 102c8
+ [sim_main:sim-fast.c, line 456]
+debug: bne [sim_main:machine.def, line 131]
+debug: instruction 102cc
+ [sim_main:sim-fast.c, line 456]
+debug: andi [sim_main:machine.def, line 395]
+debug: instruction 102d0
+ [sim_main:sim-fast.c, line 456]
+debug: andi [sim_main:machine.def, line 395]
+debug: instruction 102d4
+ [sim_main:sim-fast.c, line 456]
+debug: add [sim_main:machine.def, line 478]
+debug: instruction 102d8
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 102dc
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 102e0
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 102e4
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 102e8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 102ec
+ [sim_main:sim-fast.c, line 456]
+debug: bltu [sim_main:machine.def, line 163]
+debug: instruction 102f0
+ [sim_main:sim-fast.c, line 456]
+debug: bne [sim_main:machine.def, line 131]
+debug: instruction 102f4
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 100ac
+ [sim_main:sim-fast.c, line 456]
+debug: auipc [sim_main:machine.def, line 21]
+debug: instruction 100b0
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 100b4
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 100b8
+ [sim_main:sim-fast.c, line 456]
+debug: auipc [sim_main:machine.def, line 21]
+debug: instruction 100bc
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 100c0
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 10508
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 1050c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10510
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10514
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10518
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 1051c
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10520
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10524
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 1057c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10580
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 10584
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 10528
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 1052c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10530
+ [sim_main:sim-fast.c, line 456]
+debug: blt [sim_main:machine.def, line 141]
+debug: instruction 10534
+ [sim_main:sim-fast.c, line 456]
+debug: slli [sim_main:machine.def, line 403]
+debug: instruction 10538
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 10564
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10568
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 1056c
+ [sim_main:sim-fast.c, line 456]
+debug: add [sim_main:machine.def, line 478]
+debug: instruction 10570
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 10574
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10578
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 100c4
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 10218
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 1021c
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 10220
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 10224
+ [sim_main:sim-fast.c, line 456]
+debug: lui [sim_main:machine.def, line 13]
+debug: instruction 10228
+ [sim_main:sim-fast.c, line 456]
+debug: lui [sim_main:machine.def, line 13]
+debug: instruction 1022c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10230
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10234
+ [sim_main:sim-fast.c, line 456]
+debug: sub [sim_main:machine.def, line 556]
+debug: instruction 10238
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 1023c
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 10240
+ [sim_main:sim-fast.c, line 456]
+debug: srai [sim_main:machine.def, line 423]
+debug: instruction 10244
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 10264
+ [sim_main:sim-fast.c, line 456]
+debug: lui [sim_main:machine.def, line 13]
+debug: instruction 10268
+ [sim_main:sim-fast.c, line 456]
+debug: lui [sim_main:machine.def, line 13]
+debug: instruction 1026c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10270
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10274
+ [sim_main:sim-fast.c, line 456]
+debug: sub [sim_main:machine.def, line 556]
+debug: instruction 10278
+ [sim_main:sim-fast.c, line 456]
+debug: srai [sim_main:machine.def, line 423]
+debug: instruction 1027c
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 10280
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10284
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10288
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 1028c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10290
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10294
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 10074
+ [sim_main:sim-fast.c, line 456]
+debug: lui [sim_main:machine.def, line 13]
+debug: instruction 10078
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 1007c
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 1008c
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 10298
+ [sim_main:sim-fast.c, line 456]
+debug: bne [sim_main:machine.def, line 131]
+debug: instruction 10288
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 1028c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10290
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10294
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 1018c
+ [sim_main:sim-fast.c, line 456]
+debug: lui [sim_main:machine.def, line 13]
+debug: instruction 10190
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10194
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 101bc
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 10100
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10104
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10108
+ [sim_main:sim-fast.c, line 456]
+debug: sub [sim_main:machine.def, line 556]
+debug: instruction 1010c
+ [sim_main:sim-fast.c, line 456]
+debug: srai [sim_main:machine.def, line 423]
+debug: instruction 10110
+ [sim_main:sim-fast.c, line 456]
+debug: srli [sim_main:machine.def, line 415]
+debug: instruction 10114
+ [sim_main:sim-fast.c, line 456]
+debug: add [sim_main:machine.def, line 478]
+debug: instruction 10118
+ [sim_main:sim-fast.c, line 456]
+debug: srai [sim_main:machine.def, line 423]
+debug: instruction 1011c
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 10134
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 10298
+ [sim_main:sim-fast.c, line 456]
+debug: bne [sim_main:machine.def, line 131]
+debug: instruction 1029c
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 102a0
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 102a4
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 102a8
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 102ac
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 102b0
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 100c8
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 100cc
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 100d0
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 100d4
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 101c0
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 101c4
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 101c8
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 101cc
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 101d0
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 101d4
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 101d8
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 101dc
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 101e0
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 101e4
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 101e8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 101ec
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 101f0
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 101f4
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 101f8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 101fc
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 10390
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10394
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 10398
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 1039c
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 103a0
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 103a4
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 103a8
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 103ac
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 103b0
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 103b4
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 103b8
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 103bc
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 103c0
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 103c4
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 103c8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 103cc
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 103d0
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 103d4
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 103d8
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 103dc
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 103e0
+ [sim_main:sim-fast.c, line 456]
+debug: blt [sim_main:machine.def, line 141]
+debug: instruction 103e4
+ [sim_main:sim-fast.c, line 456]
+debug: slli [sim_main:machine.def, line 403]
+debug: instruction 103e8
+ [sim_main:sim-fast.c, line 456]
+debug: add [sim_main:machine.def, line 478]
+debug: instruction 103ec
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 10434
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10438
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 1043c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10440
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 10494
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 10498
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 10448
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 1044c
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10450
+ [sim_main:sim-fast.c, line 456]
+debug: sll [sim_main:machine.def, line 486]
+debug: instruction 10454
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10458
+ [sim_main:sim-fast.c, line 456]
+debug: and [sim_main:machine.def, line 546]
+debug: instruction 1045c
+ [sim_main:sim-fast.c, line 456]
+debug: bne [sim_main:machine.def, line 131]
+debug: instruction 10460
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 104a8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 104ac
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 104b0
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 104b4
+ [sim_main:sim-fast.c, line 456]
+debug: lui [sim_main:machine.def, line 13]
+debug: instruction 104b8
+ [sim_main:sim-fast.c, line 456]
+debug: lui [sim_main:machine.def, line 13]
+debug: instruction 104bc
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 104c0
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 104c4
+ [sim_main:sim-fast.c, line 456]
+debug: sub [sim_main:machine.def, line 556]
+debug: instruction 104c8
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 104cc
+ [sim_main:sim-fast.c, line 456]
+debug: srai [sim_main:machine.def, line 423]
+debug: instruction 104d0
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 104d4
+ [sim_main:sim-fast.c, line 456]
+debug: slli [sim_main:machine.def, line 403]
+debug: instruction 104d8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 104dc
+ [sim_main:sim-fast.c, line 456]
+debug: add [sim_main:machine.def, line 478]
+debug: instruction 104e0
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 104e4
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 104e8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 104ec
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 10138
+ [sim_main:sim-fast.c, line 456]
+debug: lbu [sim_main:machine.def, line 235]
+debug: instruction 1013c
+ [sim_main:sim-fast.c, line 456]
+debug: bne [sim_main:machine.def, line 131]
+debug: instruction 10140
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10144
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 10148
+ [sim_main:sim-fast.c, line 456]
+debug: sw [sim_main:machine.def, line 327]
+debug: instruction 1014c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10150
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 100dc
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 100e0
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 100e4
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 100fc
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 10154
+ [sim_main:sim-fast.c, line 456]
+debug: lui [sim_main:machine.def, line 13]
+debug: instruction 10158
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 1015c
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 10170
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10174
+ [sim_main:sim-fast.c, line 456]
+debug: sb [sim_main:machine.def, line 299]
+debug: instruction 10178
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 1017c
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10180
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10184
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 104f0
+ [sim_main:sim-fast.c, line 456]
+debug: bne [sim_main:machine.def, line 131]
+debug: instruction 104f4
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 104f8
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 104fc
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10500
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10504
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 10464
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10468
+ [sim_main:sim-fast.c, line 456]
+debug: bne [sim_main:machine.def, line 131]
+debug: instruction 1046c
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10470
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 103f8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 103fc
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10400
+ [sim_main:sim-fast.c, line 456]
+debug: bne [sim_main:machine.def, line 131]
+debug: instruction 10404
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10408
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 1040c
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10410
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10414
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10418
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 1041c
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10420
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10424
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10428
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 1042c
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10430
+ [sim_main:sim-fast.c, line 456]
+debug: jalr [sim_main:machine.def, line 43]
+debug: instruction 10200
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10204
+ [sim_main:sim-fast.c, line 456]
+debug: lw [sim_main:machine.def, line 220]
+debug: instruction 10208
+ [sim_main:sim-fast.c, line 456]
+debug: beq [sim_main:machine.def, line 120]
+debug: instruction 10210
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 10214
+ [sim_main:sim-fast.c, line 456]
+debug: jal [sim_main:machine.def, line 32]
+debug: instruction 105b4
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 105b8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 105bc
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 105c0
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 105c4
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 105c8
+ [sim_main:sim-fast.c, line 456]
+debug: addi [sim_main:machine.def, line 354]
+debug: instruction 105cc
+ [sim_main:sim-fast.c, line 456]
+debug: call sys_syscall [sys_syscall:syscall.c, line 528]
+debug: Number 93 [sys_syscall:syscall.c, line 529]
+
+sim: ** simulation statistics **
+sim_num_insn                    263 # total number of instructions executed
+sim_elapsed_time                  1 # total simulation time in seconds
+sim_inst_rate              263.0000 # simulation speed (in insts/sec)
+ld_text_base             0x00010074 # program text (code) segment base
+ld_text_bound            0x00010600 # program text (code) segment bound
+ld_text_size                   1420 # program text (code) size in bytes
+ld_data_base             0x00011600 # program initialized data segment base
+ld_data_bound            0x00011a60 # program initialized data segment bound
+ld_data_size                   1120 # program init'ed `.data' and uninit'ed `.bss' size in bytes
+ld_stack_base            0xc0000000 # program stack segment base (highest address in stack)
+ld_stack_size                 16384 # program initial stack size
+ld_prog_entry            0x00010090 # program entry point (initial PC)
+ld_environ_base          0xbfffc000 # program environment base address address
+ld_target_big_endian              0 # target executable endian-ness, non-zero if big endian
+mem.page_count                    4 # total number of pages allocated
+mem.page_mem                    16k # total size of memory pages allocated
+mem.ptab_misses                   4 # total first level page table misses
+mem.ptab_accesses             12738 # total page table accesses
+mem.ptab_miss_rate           0.0003 # first level page table miss rate
+

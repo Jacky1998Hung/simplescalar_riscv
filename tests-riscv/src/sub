@@ -1,0 +1,17 @@
+fsgnjx.d
+fadd.d
+remu
+slt
+slti
+amoswap.w
+fsub.d
+fmsub.d
+lr.w
+srl
+sc.w
+xor
+fence
+flt.d
+fmadd.d
+csrrw
+fcvt.d.w

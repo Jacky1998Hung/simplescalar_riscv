@@ -1,0 +1,1 @@
+target-riscv64/symbol.c

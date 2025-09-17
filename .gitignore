@@ -1,0 +1,12 @@
+*.o
+*.swp
+sim-cache
+sim-fast
+sim-safe
+sim-outorder
+sysprobe
+sim-fastone
+.idea/
+tests-alpha/*
+tests-pisa/*
+libexo/*

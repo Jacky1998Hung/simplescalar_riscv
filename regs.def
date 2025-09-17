@@ -1,0 +1,120 @@
+
+#define GET_FCSR(N,fcsr)       ((N==1) ? (fcsr & (0b11111)) \
+                                :((N==2)?((fcsr & 0b11100000)>>5)\
+                                :/*N==3*/ fcsr & 0xFF))
+#define SET_FCSR(N,fcsr,EXPR)  ((N==1) ? (fcsr = ((fcsr & ~0b11111) | ((EXPR) & 0b11111))) \
+                                :((N==2)? (fcsr = ((fcsr & ~0b11100000) | (((EXPR) & 0b111) << 5)))\
+                                :/*N==3*/ (fcsr = (((fcsr) & (~0xFF)) | ((EXPR) & 0xFF)))) )
+
+#ifdef SIM_OUTORDER
+
+#define FPR_SW(N)                  (BITMAP_SET_P(use_spec_F, F_BMAP_SZ, (N))\
+                                 ? spec_regs_F.sw[(N)*2]                 \
+                                 : regs.regs_F.sw[(N)*2])
+#define SET_FPR_SW(N,EXPR)         (spec_mode                              \
+                                 ? ((spec_regs_F.sw[(N)*2] = (EXPR)),    \
+                                    BITMAP_SET(use_spec_F,F_BMAP_SZ, (N)),\
+                                    spec_regs_F.sw[(N)*2])                       \
+                                 : (regs.regs_F.sw[(N)*2] = (EXPR)))
+
+#define FPR_W(N)                  (BITMAP_SET_P(use_spec_F, F_BMAP_SZ, (N))\
+                                 ? spec_regs_F.w[(N)*2]                 \
+                                 : regs.regs_F.w[(N)*2])
+#define SET_FPR_W(N,EXPR)         (spec_mode                              \
+                                 ? ((spec_regs_F.w[(N)*2] = (EXPR)),    \
+                                    BITMAP_SET(use_spec_F,F_BMAP_SZ, (N)),\
+                                    spec_regs_F.w[(N)*2])                       \
+                                 : (regs.regs_F.w[(N)*2] = (EXPR)))
+#define FPR(N)                  (BITMAP_SET_P(use_spec_F, F_BMAP_SZ, (N))\
+                                 ? spec_regs_F.f[(N)*2]                 \
+                                 : regs.regs_F.f[(N)*2])
+#define SET_FPR(N,EXPR)         (spec_mode                              \
+                                 ? ((spec_regs_F.f[(N)*2] = (EXPR)),    \
+                                    BITMAP_SET(use_spec_F,F_BMAP_SZ, (N)),\
+                                    spec_regs_F.f[(N)*2])                       \
+                                 : (regs.regs_F.f[(N)*2] = (EXPR)))
+#define FPRD_Q(N)                 (BITMAP_SET_P(use_spec_F, F_BMAP_SZ, (N))\
+                                 ? spec_regs_F.q[(N)]                   \
+                                 : regs.regs_F.q[(N)])
+#define SET_FPRD_Q(N,EXPR)                (spec_mode                              \
+                                 ? ((spec_regs_F.q[(N)] = (EXPR)),      \
+                                    BITMAP_SET(use_spec_F, F_BMAP_SZ, (N)),\
+                                    spec_regs_F.q[(N)])                 \
+                                 : (regs.regs_F.q[(N)] = (EXPR)))
+#define FPRD(N)                 (BITMAP_SET_P(use_spec_F, F_BMAP_SZ, (N))\
+                                 ? spec_regs_F.d[(N)]                   \
+                                 : regs.regs_F.d[(N)])
+#define SET_FPRD(N,EXPR)                (spec_mode                              \
+                                 ? ((spec_regs_F.d[(N)] = (EXPR)),      \
+                                    BITMAP_SET(use_spec_F,F_BMAP_SZ, (N)),\
+                                    spec_regs_F.d[(N)])                 \
+                                 : (regs.regs_F.d[(N)] = (EXPR)))
+
+#define GET_FCSR(N, fcsr)       ((N==1) ? (fcsr & (0b11111)) \
+                                :((N==2)?((fcsr & 0b11100000)>>5)\
+                                :/*N==3*/ fcsr & 0xFF))
+
+#define SET_FCSR(N, fcsr, EXPR) ((N==1) ? (fcsr = ((fcsr & ~0b11111) | ((EXPR) & 0b11111))) \
+                                :((N==2)? (fcsr = ((fcsr & ~0b11100000) | (((EXPR) & 0b111) << 5)))\
+                                :/*N==3*/ (fcsr = (((fcsr) & (~0xFF)) | ((EXPR) & 0xFF)))) )
+
+#define CSRS(N)                 (BITMAP_SET_P(use_spec_C, C_BMAP_SZ, 0)\
+                                ? GET_CSRS((N), spec_regs_C) \
+                                : GET_CSRS((N), regs.regs_C))
+
+#define GET_CSRS(N, csrs)       (csrs.csr[N])
+
+#define SET_CSRS(N,EXPR)        (spec_mode                              \
+                                ? (SET_CSR((N), spec_regs_C, (EXPR)),     \
+                                   BITMAP_SET(use_spec_C, C_BMAP_SZ, 0),\
+                                   GET_CSRS(N, spec_regs_C))                       \
+                                : (SET_CSR((N), regs.regs_C, (EXPR))))
+
+#define SYNC_FCSR(CSR, CMD)  \
+do{   \
+   if(CSR == FCSR){  \
+      if(CMD == 0 /* READ */)   \
+         SET_CSRS(FCSR, (CSRS(FRM) << 5) | CSRS(FFLAGS));   \
+      else if(CMD == 1 /* WRITE */) {  \
+         SET_CSRS(FRM, ((CSRS(FCSR) >> 5) & 0x3)); \
+         SET_CSRS(FFLAGS, (CSRS(FCSR) & 0x1f));  \
+      }  \
+   }  \
+}while(0)
+
+#define SET_CSR(N, csrs, EXPR)   (csrs.csr[N] = EXPR)
+
+#define DO_AQ_RL(a, r)
+#else
+#define FPR_SW(N)                (regs.regs_F.sw[(N)<<1])
+#define SET_FPR_SW(N,EXPR)       (regs.regs_F.sw[(N)<<1] = (EXPR))
+
+#define FPR_W(N)                (regs.regs_F.w[(N)<<1])
+#define SET_FPR_W(N,EXPR)       (regs.regs_F.w[(N)<<1] = (EXPR))
+#define FPR(N)                  (regs.regs_F.f[(N)<<1])
+#define SET_FPR(N,EXPR)         (regs.regs_F.f[(N)<<1] = (EXPR))
+#define FPRD_Q(N)               (regs.regs_F.q[N])
+#define SET_FPRD_Q(N,EXPR)      (regs.regs_F.q[N] = (EXPR))
+#define FPRD(N)                 (regs.regs_F.d[N])
+#define SET_FPRD(N,EXPR)        (regs.regs_F.d[N] = (EXPR))
+
+#define CSRS(N)                 (GET_CSRS((N), regs.regs_C))
+#define GET_CSRS(N, csrs)       (csrs.csr[N])
+#define SET_CSRS(N,EXPR)        (SET_CSR((N), regs.regs_C, (EXPR)))
+#define SET_CSR(N, csrs, EXPR)   (csrs.csr[N] = EXPR)
+
+#define SYNC_FCSR(CSR, CMD)  \
+do{   \
+   if(CSR == FCSR){  \
+      if(CMD == 0 /* READ */)   \
+         SET_CSRS(FCSR, (CSRS(FRM) << 5) | CSRS(FFLAGS));   \
+      else if(CMD == 1 /* WRITE */) {  \
+         SET_CSRS(FRM, ((CSRS(FCSR) >> 5) & 0x3)); \
+         SET_CSRS(FFLAGS, (CSRS(FCSR) & 0x1f));  \
+      }  \
+   }  \
+}while(0)
+
+#define DO_AQ_RL(a, r)
+
+#endif

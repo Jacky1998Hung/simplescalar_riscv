@@ -1,0 +1,30 @@
+switch (op) {
+#define DEFINST(OP, MSK, NAME, OPFORM, RES, CLASS, O1, O2, O3, I1, I2, I3, I4)    \
+    case OP:                            \
+      out1a = O1; out2a = O2; out3a = O3;                \
+      in1a = I1; in2a = I2; in3a = I3; in4a = I4;            \
+      break;
+
+#define DEFLINK(OP, MSK, NAME, MASK, SHIFT, SECOND_SHIFT)                    \
+    case OP:                            \
+      op = MD_NOP_OP;                        \
+      out1a = NA; out2a = NA; out3a = NA;                \
+      in1a = NA; in2a = NA; in3a = NA; in4a = NA;            \
+      /* no EXPR */                            \
+      break;
+#define CONNECT(OP)    /* nada... */
+
+#define DECLARE_FAULT(FAULT) {break;}
+
+#include "machine.def"
+
+            default:
+                op = MD_NOP_OP;
+		            out1a = NA;
+                out2a = NA;
+                out3a = NA;
+                in1a = NA;
+                in2a = NA;
+                in3a = NA;
+                in4a = NA;
+        }
