@@ -139,6 +139,7 @@ __ptrace_newinst(unsigned int iseq,	/* instruction sequence number */
 		 md_addr_t pc,		/* program counter of instruction */
 		 md_addr_t addr,  	/* address referenced, if load/store */
 		 tick_t cycle);
+
 /* declare a new uop */
 void
 __ptrace_newuop(unsigned int iseq,	/* instruction sequence number */

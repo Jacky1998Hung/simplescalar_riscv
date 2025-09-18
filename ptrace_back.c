@@ -83,8 +83,6 @@ static RingBuffer *rb = NULL;
 
 int is_event = FALSE;
 
-char *event_name = NULL;
-
 /* open pipeline trace */
 void
 ptrace_open(char *fname,		/* output filename */
@@ -92,8 +90,8 @@ ptrace_open(char *fname,		/* output filename */
 {
   char *errstr;
 
-  /*###########################################*/
-  printf("############################### MY TEST #################################\n");
+    /*###########################################*/
+  printf("############################### MY TEST #################################");
 
   /* parse the output range */
   if (!range)
@@ -123,27 +121,22 @@ ptrace_open(char *fname,		/* output filename */
   else
     {
       ptrace_outfd = fopen(fname, "w");
-
-      /* name konata file */
+      /* ##### open konata file ##### */
       char konata_name[1024];
       char ring_konata_name[1024];
       snprintf(konata_name, sizeof(konata_name), "%s.txt", fname);
       snprintf(ring_konata_name, sizeof(ring_konata_name), "%s.ring.txt", fname);
-      /* open konata file */
+      // 開 啟 konata 檔案
       konata_file = fopen(konata_name, "w");
       ring_konata = fopen(ring_konata_name, "w");
-      if (!konata_file) 
+      if (!konata_file)
         fatal("cannot open pipetrace output file `%s'", fname);
-
-      /* header */
       fprintf(konata_file, "Kanata 0004\n");
       fprintf(ring_konata, "Kanata 0004\n");
       rb = malloc(sizeof(RingBuffer));
-      rb_init(rb);
-      printf("rb is initialized, BUFFER_SIZE = %d\n", RING_BUFFER_SIZE); 
       if(!rb)
 	fatal("RingBuffer is not initialized");
-
+      rb_init(rb);
       if (!ptrace_outfd)
 	fatal("cannot open pipetrace output file `%s'", fname);
     }
@@ -155,7 +148,6 @@ ptrace_close(void)
 {
   if (ptrace_outfd != NULL && ptrace_outfd != stderr && ptrace_outfd != stdout)
     fclose(ptrace_outfd);
-
   /* ##### close konata trace file ##### */
   fflush(konata_file);
   fclose(konata_file);
@@ -179,12 +171,11 @@ __ptrace_newinst(unsigned int iseq,	/* instruction sequence number */
   fprintf(konata_file, "I\t%u\t%u\t%u\n", iseq, iseq, 0);
 
   /* rb_pushf */
-  //rb_pushf(rb, cycle, "I\t%u\t%u\t%u\n", iseq, iseq, 0);
   fprintf(ring_konata, "I\t%u\t%u\t%u\n", iseq, iseq, 0);
 
   /* ##### konata add 'L' command, this need to execute before 'md_print_insn_konata'*/
   fprintf(konata_file, "L\t%u\t0\t%.8llx:", iseq, pc);
-	
+
   md_print_insn(inst, addr, ptrace_outfd);
 
   /* ##### Enter 'md_print_insn_konata' to continue produce 'L''s konata output ##### */
@@ -192,13 +183,15 @@ __ptrace_newinst(unsigned int iseq,	/* instruction sequence number */
 
   /* md_print_insn_rb */
   char *buffer = md_print_insn_rb(inst, addr);
-  rb_pushf(rb, cycle, "L\t%u\t0\t%.8llx:%s Cycle: %.0f\n", iseq, pc, buffer, (double)cycle);
+  rb_pushf(rb, cycle, "L\t%u\t0\t%.8llx:%s", iseq, pc, buffer);
+
   fprintf(ptrace_outfd, "\n");
 
   fprintf(konata_file, "\n");
 
   if (ptrace_outfd == stderr || ptrace_outfd == stdout)
     fflush(ptrace_outfd);
+
 }
 
 /* declare a new uop */
@@ -218,6 +211,7 @@ __ptrace_newuop(unsigned int iseq,	/* instruction sequence number */
   fprintf(konata_file, "I\t%u\t%u\t%u\n", iseq, iseq, 0);
 
   rb_pushf(rb, 0, "I\t%u\t%u\t%u\n", iseq, iseq, 0);
+
   /* ##### konata add 'L' command, this need to execute before 'md_print_insn_konata'*/
   fprintf(konata_file, "L\t%u\t0\t%.8llx:[%s]\n", iseq, pc, uop_desc);
 
@@ -246,12 +240,10 @@ __ptrace_newcycle(tick_t cycle)		/* new cycle */
 
   /* ##### konata new cycle ##### */
   fprintf(konata_file, "C\t1\n");
+
   rb_pushf(rb, cycle,  "C\t1\n");
-  
+
   if(is_event) {
-	  
-    fprintf(ring_konata, "-------------------Cycle: %.0f Event name:%s-----------------\n", (double)cycle, event_name);
-    
     rb_dump_before(rb, 128, ring_konata);
     rb_clear(rb);
     is_event = 0;
@@ -271,7 +263,7 @@ __ptrace_newstage(unsigned int iseq,	/* instruction sequence number */
 
   fprintf(konata_file,  "S\t%u\t0\t%s\n", iseq, pstage);
 
-  rb_pushf(rb, 0, "S\t%u\t0\t%s\n", iseq, pstage);  
+  rb_pushf(rb, 0, "S\t%u\t0\t%s\n", iseq, pstage);
 
   if (ptrace_outfd == stderr || ptrace_outfd == stdout)
     fflush(ptrace_outfd);
@@ -281,7 +273,6 @@ __ptrace_newstage(unsigned int iseq,	/* instruction sequence number */
   if (pevents & PEV_CACHEMISS) {
         event = "i-cache-miss";
 	is_event = 1;
-	event_name = event;
   } else if (pevents & PEV_TLBMISS) {
         event = "i-tlb-miss";
   } else if (pevents & PEV_MPOCCURED) {

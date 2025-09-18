@@ -123,7 +123,7 @@ void rb_dump_before(const RingBuffer *rb, size_t N, FILE *out) {
     for (size_t k = 0; k < N; ++k) {
         size_t idx = (start + k) % RING_BUFFER_SIZE;
         const TraceEntry *e = &rb->buffer[idx];
-        if (e->valid) fprintf(out, "%s\n", e->entry);
+        if (e->valid) fprintf(out, "%s", e->entry);
     }
 }
 
