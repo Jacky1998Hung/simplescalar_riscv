@@ -4931,6 +4931,7 @@ if(verbose) {
         ptrace_newinst(fetch_data[fetch_tail].ptrace_seq,
                        inst, fetch_data[fetch_tail].regs_PC,
 		       0, sim_cycle);
+
         ptrace_newstage(fetch_data[fetch_tail].ptrace_seq,
                         PST_IFETCH,
                         ((last_inst_missed ? PEV_CACHEMISS : 0)
