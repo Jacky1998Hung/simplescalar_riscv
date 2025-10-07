@@ -51,6 +51,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "host.h"
 #include "misc.h"
@@ -58,6 +59,7 @@
 #include "range.h"
 #include "ptrace.h"
 #include "ring_buffer.h"
+#include "capture_buf.h"
 
 /* pipetrace file */
 FILE *ptrace_outfd = NULL;
@@ -84,6 +86,51 @@ static RingBuffer *rb = NULL;
 int is_event = FALSE;
 
 char *event_name = NULL;
+
+typedef enum { CAP_IDLE = 0, CAP_WITH_SNAPSHOT, CAP_POST_ONLY } CapState;
+static CapState cap_state = CAP_IDLE;
+static int      cap_active = 0;               /* mirrors on/off */
+static int      recent_dump = 0;              /* last segment already dumped */
+static size_t   cap_before_entries = 128;     /* tunable */
+static size_t   cap_post_cycles_target = 50;  /* tunable */
+static size_t   cap_post_cycles_seen = 0;
+static CaptureBuf capbuf;
+static TraceEntry tmp_before[512];            /* temp for snapshot */
+static tick_t  current_cycle = 0;
+
+static inline void rb_logf(int cycle, const char *fmt, ...) {
+    char line[RING_BUFFER_ENTRY_BYTES];
+    va_list ap; va_start(ap, fmt);
+    vsnprintf(line, sizeof(line), fmt, ap);
+    va_end(ap);
+    rb_push_raw(rb, cycle, line);
+    if (cap_active) cap_append(&capbuf, cycle, line);
+}
+
+static inline void START_MIRROR(void){ cap_active = 1; }
+static inline void STOP_MIRROR(void) { cap_active = 0; }
+static inline void RESET_COUNTDOWN(void){ cap_post_cycles_seen = 0; }
+static inline void INC_COUNTDOWN(void){ ++cap_post_cycles_seen; }
+
+static void SNAPSHOT_BEFORE(size_t N) {
+    size_t got = rb_copy_last(rb, N, tmp_before, sizeof(tmp_before)/sizeof(tmp_before[0]));
+    cap_reset(&capbuf);
+    for (size_t i=0; i<got; ++i)
+        if (tmp_before[i].valid) cap_append(&capbuf, tmp_before[i].cycle, tmp_before[i].entry);
+}
+
+static void DUMP_AND_RESET(FILE *out) {
+    fprintf(out, "----- segment dump -----\n");
+    cap_flush(&capbuf, out);
+    cap_reset(&capbuf);
+    STOP_MIRROR();
+    recent_dump = 1;
+    cap_state = CAP_IDLE;
+    is_event = 0;
+    event_name = NULL;
+    rb_clear(rb); /* optional, but keeps ring_konata segments cleanly separated */
+}
+
 
 /* open pipeline trace */
 void
@@ -140,6 +187,7 @@ ptrace_open(char *fname,		/* output filename */
       fprintf(ring_konata, "Kanata 0004\n");
       rb = malloc(sizeof(RingBuffer));
       rb_init(rb);
+      cap_init(&capbuf, 512);
       printf("rb is initialized, BUFFER_SIZE = %d\n", RING_BUFFER_SIZE); 
       if(!rb)
 	fatal("RingBuffer is not initialized");
@@ -162,6 +210,7 @@ ptrace_close(void)
   fflush(ring_konata);
   fclose(ring_konata);
   free(rb);
+  cap_free(&capbuf);
 }
 
 #define PTRACE_C
@@ -192,7 +241,8 @@ __ptrace_newinst(unsigned int iseq,	/* instruction sequence number */
 
   /* md_print_insn_rb */
   char *buffer = md_print_insn_rb(inst, addr);
-  rb_pushf(rb, cycle, "L\t%u\t0\t%.8llx:%s Cycle: %.0f\n", iseq, pc, buffer, (double)cycle);
+  //rb_pushf(rb, cycle, "L\t%u\t0\t%.8llx:%s Cycle: %.0f\n", iseq, pc, buffer, (double)cycle);
+  rb_logf(cycle, "L\t%u\t0\t%.8llx:%s Cycle: %.0f\n", iseq, pc, buffer, (double)cycle);
   fprintf(ptrace_outfd, "\n");
 
   fprintf(konata_file, "\n");
@@ -217,11 +267,13 @@ __ptrace_newuop(unsigned int iseq,	/* instruction sequence number */
   /* ##### konata add 'I' command */
   fprintf(konata_file, "I\t%u\t%u\t%u\n", iseq, iseq, 0);
 
-  rb_pushf(rb, 0, "I\t%u\t%u\t%u\n", iseq, iseq, 0);
+  //rb_pushf(rb, 0, "I\t%u\t%u\t%u\n", iseq, iseq, 0);
+  rb_logf(0, "I\t%u\t%u\t%u\n", iseq, iseq, 0);
   /* ##### konata add 'L' command, this need to execute before 'md_print_insn_konata'*/
   fprintf(konata_file, "L\t%u\t0\t%.8llx:[%s]\n", iseq, pc, uop_desc);
 
-  rb_pushf(rb, 0, "L\t%u\t0\t%.8llx:[%s]\n", iseq, pc, uop_desc);
+  //rb_pushf(rb, 0, "L\t%u\t0\t%.8llx:[%s]\n", iseq, pc, uop_desc);
+  rb_logf(0, "L\t%u\t0\t%.8llx:[%s]\n", iseq, pc, uop_desc);
 }
 
 /* declare instruction retirement or squash */
@@ -235,7 +287,9 @@ __ptrace_endinst(unsigned int iseq)	/* instruction sequence number */
 
   /* ##### konata add 'R' command */
   fprintf(konata_file, "R\t%u\t0\t0\n", iseq);
-  rb_pushf(rb, 0,  "R\t%u\t0\t0\n", iseq);
+  //rb_pushf(rb, 0,  "R\t%u\t0\t0\n", iseq);
+  rb_logf(0,  "R\t%u\t0\t0\n", iseq);
+
 }
 
 /* declare a new cycle */
@@ -243,11 +297,13 @@ void
 __ptrace_newcycle(tick_t cycle)		/* new cycle */
 {
   fprintf(ptrace_outfd, "@ %.0f\n", (double)cycle);
-
+  
+  current_cycle = cycle;
   /* ##### konata new cycle ##### */
   fprintf(konata_file, "C\t1\n");
-  rb_pushf(rb, cycle,  "C\t1\n");
-  
+  //rb_pushf(rb, cycle,  "C\t1\n");
+  rb_logf((int)cycle,  "C\t1\n"); 
+ /* 
   if(is_event) {
 	  
     fprintf(ring_konata, "-------------------Cycle: %.0f Event name:%s-----------------\n", (double)cycle, event_name);
@@ -255,6 +311,13 @@ __ptrace_newcycle(tick_t cycle)		/* new cycle */
     rb_dump_before(rb, 128, ring_konata);
     rb_clear(rb);
     is_event = 0;
+  }
+*/
+  if (cap_state != CAP_IDLE) {
+    INC_COUNTDOWN();
+    if (cap_post_cycles_seen >= cap_post_cycles_target) {
+        DUMP_AND_RESET(ring_konata);
+    }
   }
 
   if (ptrace_outfd == stderr || ptrace_outfd == stdout)
@@ -271,8 +334,8 @@ __ptrace_newstage(unsigned int iseq,	/* instruction sequence number */
 
   fprintf(konata_file,  "S\t%u\t0\t%s\n", iseq, pstage);
 
-  rb_pushf(rb, 0, "S\t%u\t0\t%s\n", iseq, pstage);  
-
+  //rb_pushf(rb, 0, "S\t%u\t0\t%s\n", iseq, pstage);  
+  rb_logf(0, "S\t%u\t0\t%s\n", iseq, pstage);
   if (ptrace_outfd == stderr || ptrace_outfd == stdout)
     fflush(ptrace_outfd);
 
@@ -282,6 +345,25 @@ __ptrace_newstage(unsigned int iseq,	/* instruction sequence number */
         event = "i-cache-miss";
 	is_event = 1;
 	event_name = event;
+	    if (cap_state == CAP_IDLE) {
+              if (!recent_dump) {
+              /* first event in segment -> snapshot before + start mirroring */
+              SNAPSHOT_BEFORE(cap_before_entries);
+              START_MIRROR();
+              RESET_COUNTDOWN();
+              cap_state = CAP_WITH_SNAPSHOT;
+              } else {
+            /* new segment after a recent dump -> mirror only */
+              START_MIRROR();
+              RESET_COUNTDOWN();
+              cap_state = CAP_POST_ONLY;
+                }
+            } else {
+              /* already capturing: extend window */
+              RESET_COUNTDOWN();
+              }
+  
+
   } else if (pevents & PEV_TLBMISS) {
         event = "i-tlb-miss";
   } else if (pevents & PEV_MPOCCURED) {
@@ -294,6 +376,7 @@ __ptrace_newstage(unsigned int iseq,	/* instruction sequence number */
 
   if (event != NULL) {
       fprintf(konata_file,  "L\t%u\t1\t%s\n", iseq, event);
-      rb_pushf(rb, 0, "L\t%u\t1\t%s\n", iseq, event);
+      //rb_pushf(rb, 0, "L\t%u\t1\t%s\n", iseq, event);
+      rb_logf(0, "L\t%u\t1\t%s\n", iseq, event);
   }
 }

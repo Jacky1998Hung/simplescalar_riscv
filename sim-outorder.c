@@ -2248,8 +2248,11 @@ ruu_commit(void) {
                         lat =
                                 cache_access(cache_dl1, Write, (LSQ[LSQ_head].addr & ~3),
                                              NULL, 4, sim_cycle, NULL, NULL);
-                        if (lat > cache_dl1_lat)
-                            events |= PEV_CACHEMISS;
+                        if (lat > cache_dl1_lat) {
+                            events |= PEV_DCACHEMISS;
+			    printf("Store cache miss, Cycle: %lld, latency: %d\n", sim_cycle, lat);
+			}
+
                     }
 
                     /* all loads and stores must to access D-TLB */
@@ -2332,6 +2335,7 @@ ruu_commit(void) {
                 fprintf(stderr, "|               exit ruu_commit----|\n");
                 fprintf(stderr, "===================================\n");
             }
+    if(committed == 1) printf("cycle : %lld, committed == 1\n", sim_cycle);
 }
 
 

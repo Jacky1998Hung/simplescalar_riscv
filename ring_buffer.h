@@ -55,6 +55,11 @@ void   rb_dump_after (const RingBuffer *rb, size_t N, FILE *out); /* N entries s
 typedef void (*rb_visit_fn)(const TraceEntry *e, void *ctx);
 void   rb_visit(const RingBuffer *rb, rb_visit_fn fn, void *ctx);
 
+/* Copy the most recent N entries into dst (clamped by dst_cap and availability).
+ * Returns number of entries copied. Does not modify the ring.
+ */
+size_t rb_copy_last(const RingBuffer *rb, size_t N, TraceEntry *dst, size_t dst_cap);
+
 #ifdef __cplusplus
 }
 #endif

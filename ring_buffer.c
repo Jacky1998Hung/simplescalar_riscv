@@ -142,3 +142,20 @@ void rb_dump_after(const RingBuffer *rb, size_t N, FILE *out) {
     }
 }
 
+size_t rb_copy_last(const RingBuffer *rb, size_t N, TraceEntry *dst, size_t dst_cap) {
+	if(!dst || dst_cap == 0 || rb_is_empty(rb)) return 0;
+
+	size_t total = rb_count(rb);
+	if(N > total) N = total;
+	if(N > dst_cap) N = dst_cap;
+
+	size_t start = (rb->head + RING_BUFFER_SIZE -N) % RING_BUFFER_SIZE;
+        size_t copied = 0;
+	for(size_t k = 0; k < N; ++k) {
+		size_t idx = (start + k) % RING_BUFFER_SIZE;
+		const TraceEntry *s = &rb->buffer[idx];
+		if(!s->valid) continue;
+		dst[copied++] = *s;
+	}
+	return copied;
+}

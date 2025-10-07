@@ -87,7 +87,7 @@
 #define PEV_MPOCCURED		0x00000004	/* mis-pred branch occurred */
 #define PEV_MPDETECT		0x00000008	/* mis-pred branch detected */
 #define PEV_AGEN		0x00000010	/* address generation */
-
+#define PEV_DCACHEMISS           0x00000020      /* I/D-cache miss */
 /* pipetrace file */
 extern FILE *ptrace_outfd;
 
