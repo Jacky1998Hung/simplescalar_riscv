@@ -1516,6 +1516,19 @@ sim_uninit(void) {
         ptrace_close();
 }
 
+/* ROB head blockage analysis */
+/* === NEW: commit-stall diagnostics =================================== */
+enum stall_reason {
+  STALL_NONE = 0,
+  STALL_HEAD_NOT_COMPLETE,
+  STALL_LSQ_NOT_COMPLETE,
+  STALL_LOAD_MISS,
+  STALL_DTLB_MISS,
+  STALL_STORE_ADDR_NOT_READY,
+  STALL_STORE_DATA_NOT_READY,
+  STALL_STORE_PORT_BUSY
+};
+
 /*
  * processor core definitions and declarations
  */
@@ -1583,6 +1596,14 @@ struct RUU_station {
      operands are known to be read (see lsq_refresh() for details on
      enforcing memory dependencies) */
     int idep_ready[MAX_IDEPS];        /* input operand ready? */
+
+    /* === NEW: commit-stall diagnostics =================================== */
+    unsigned int    uop_id;             /* stable id for logs (add if you don’t have one) */
+     tick_t          issue_cyc, wb_cyc;  /* optional: fill where convenient */
+    /* diagnostics (latest known cause that could block at head) */
+    enum stall_reason last_block;
+    tick_t            last_block_cycle; /* when the cause originated */
+    int               miss_level;       /* heuristic: 1=L1,2=L2,3=L3,4=Mem; optional */
 };
 /* temp ruu station buffer use for record macro fusion info that need fusing */
 struct RUU_station_buffer {
@@ -2182,6 +2203,51 @@ cv_dump(FILE *stream)                /* output stream */
     }
 }
 
+/* === NEW: pretty logging of head stalls ============================== */
+
+static unsigned int last_head_uop_id = 0;
+static int          stall_active     = 0;
+
+static const char* stall_reason_str(enum stall_reason r) {
+  switch (r) {
+    case STALL_HEAD_NOT_COMPLETE:    return "HEAD_NOT_COMPLETE";
+    case STALL_LSQ_NOT_COMPLETE:     return "LSQ_NOT_COMPLETE";
+    case STALL_LOAD_MISS:            return "LOAD_MISS";
+    case STALL_DTLB_MISS:            return "DTLB_MISS";
+    case STALL_STORE_ADDR_NOT_READY: return "STORE_ADDR_NOT_READY";
+    case STALL_STORE_DATA_NOT_READY: return "STORE_DATA_NOT_READY";
+    case STALL_STORE_PORT_BUSY:      return "STORE_PORT_BUSY";
+    default:                         return "UNKNOWN";
+  }
+}
+
+/* Print only at the start of a contiguous stall window (or head change) */
+static void log_head_stall(const struct RUU_station *rs,
+                           const struct RUU_station *lsq,
+                           enum stall_reason why)
+{
+  if (!stall_active || rs->uop_id != last_head_uop_id) {
+    fprintf(stdout,
+      "CYCLE %lld  COMMIT_STALL  head{uop=%u pc=0x%08p op=%d}  reason=%s",
+      (long long)sim_cycle, rs->uop_id, rs->PC, rs->op, stall_reason_str(why));
+
+    if (lsq && (MD_OP_FLAGS(rs->op) & F_MEM)) {
+      fprintf(stdout, "  lsq{uop=%u miss_level=%d}", lsq->uop_id, lsq->miss_level);
+    }
+
+    {
+      tick_t origin = 0;
+      if (lsq && lsq->last_block) origin = lsq->last_block_cycle;
+      else if (rs->last_block)    origin = rs->last_block_cycle;
+
+      if (origin)
+        fprintf(stdout, "  origin@%lld", (long long)origin);
+    }
+    fputc('\n', stdout);
+  }
+  stall_active = 1;
+  last_head_uop_id = rs->uop_id;
+}
 
 /*
  *  RUU_COMMIT() - instruction retirement pipeline stage
@@ -2205,9 +2271,14 @@ ruu_commit(void) {
     while (RUU_num > 0 && committed < ruu_commit_width) {
         struct RUU_station *rs = &(RUU[RUU_head]);
 
-        if (!rs->completed) {;
+        if (!rs->completed) {
             /* at least RUU entry must be complete */
-            break;
+            //break;
+	    fprintf(stdout, "  (head-not-complete: rs->issued=%d rs->queued=%d)\n", rs->issued, rs->queued);
+
+	    if (!rs->last_block) { rs->last_block = STALL_HEAD_NOT_COMPLETE; rs->last_block_cycle = rs->last_block_cycle ? rs->last_block_cycle : sim_cycle; }
+	    log_head_stall(rs, NULL, STALL_HEAD_NOT_COMPLETE);
+	    break;
         }
 
         /* default commit events */
@@ -2224,7 +2295,13 @@ ruu_commit(void) {
             /* load/store operation must be complete */
             if (!LSQ[LSQ_head].completed) {
                 /* load/store operation is not yet complete */
-                break;
+                //break;
+                fprintf(stdout, "  (lsq-not-complete: ea_comp=%d addr_ready=%d data_ready=%d)\n", RUU[RUU_head].ea_comp, STORE_ADDR_READY(&LSQ[LSQ_head]), OPERANDS_READY(&LSQ[LSQ_head]));
+		/* load/store operation is not yet complete */
+		    enum stall_reason why = STALL_LSQ_NOT_COMPLETE;
+		    if (LSQ[LSQ_head].last_block) why = LSQ[LSQ_head].last_block;
+		    log_head_stall(rs, &LSQ[LSQ_head], why);
+		    break;
             }
 
             if ((MD_OP_FLAGS(LSQ[LSQ_head].op) & (F_MEM | F_STORE))
@@ -2250,7 +2327,7 @@ ruu_commit(void) {
                                              NULL, 4, sim_cycle, NULL, NULL);
                         if (lat > cache_dl1_lat) {
                             events |= PEV_DCACHEMISS;
-			    printf("Store cache miss, Cycle: %lld, latency: %d\n", sim_cycle, lat);
+			    printf("Store cache miss, Cycle: %lld, latency: %d, addr: 0x%08p\n", sim_cycle, lat, LSQ[LSQ_head].addr);
 			}
 
                     }
@@ -2266,6 +2343,9 @@ ruu_commit(void) {
                     }
                 } else {
                     /* no store ports left, cannot continue to commit insts */
+		    LSQ[LSQ_head].last_block = STALL_STORE_PORT_BUSY;
+		    if (!LSQ[LSQ_head].last_block_cycle) LSQ[LSQ_head].last_block_cycle = sim_cycle;
+		    log_head_stall(rs, &LSQ[LSQ_head], STALL_STORE_PORT_BUSY);
                     break;
                 }
             }
@@ -2329,13 +2409,21 @@ ruu_commit(void) {
             if (rs->odep_list[i])
                 panic ("retired instruction has odeps\n");
         }
+
     }
     if(verbose) {
                 fprintf(stderr, "===================================\n");
                 fprintf(stderr, "|               exit ruu_commit----|\n");
                 fprintf(stderr, "===================================\n");
             }
-    if(committed == 1) printf("cycle : %lld, committed == 1\n", sim_cycle);
+    if(committed < 2) {
+	    committed = committed ? 1 : 0;
+	    printf("cycle : %lld, committed == %d\n", sim_cycle, committed);
+    }
+    if (committed > 0) {
+	    stall_active = 0;
+	    last_head_uop_id = 0;
+    }
 }
 
 
@@ -2451,6 +2539,8 @@ if(verbose) {
 
     /* service all completed events */
     while ((rs = eventq_next_event())) {
+	/* === NEW: timestamp at WB === */
+	rs->wb_cyc = sim_cycle;
 
         /* RS has completed execution and (possibly) produced a result */
         if (!OPERANDS_READY(rs) || rs->queued || !rs->issued || rs->completed)
@@ -2848,6 +2938,18 @@ ruu_issue(void) {
                             }
 
                             /* use computed cache access latency */
+			    /* === NEW: mark the origin of a future head stall (load miss/TLB) === */
+			    if (load_lat > cache_dl1_lat) {
+				    rs->last_block       = STALL_LOAD_MISS;
+				    rs->last_block_cycle = sim_cycle;        /* origin time */
+				    rs->miss_level       = 2; /* e.g., >L1 → L2+ */
+			    }
+			    if (tlb_lat > 1) {
+				    rs->last_block       = STALL_DTLB_MISS;
+				    rs->last_block_cycle = sim_cycle;
+			    }
+
+
                             eventq_queue_event(rs, sim_cycle + load_lat);
 
                             /* entered execute stage, indicate in pipe trace */
@@ -4535,6 +4637,12 @@ if(verbose) {
             rs->queued = rs->issued = rs->completed = FALSE;
             rs->ptrace_seq = pseq;
             rs->mf_firstPC = mf_firstPC;
+		
+	    static unsigned int next_uop_id = 1;
+	    rs->uop_id           = next_uop_id++;
+	    rs->last_block       = STALL_NONE;
+	    rs->last_block_cycle = 0;
+	    rs->miss_level       = 0;
 
             /* split ld/st's into two operations: eff addr comp + mem access */
             if (MD_OP_FLAGS(op) & F_MEM) {
@@ -4562,6 +4670,11 @@ if(verbose) {
                 lsq->queued = lsq->issued = lsq->completed = FALSE;
                 lsq->ptrace_seq = ptrace_seq++;
                 lsq->mf_firstPC = mf_firstPC;
+
+		lsq->uop_id           = rs->uop_id;
+		lsq->last_block       = STALL_NONE;
+		lsq->last_block_cycle = 0;
+		lsq->miss_level       = 0;
 
                 /* pipetrace this uop */
                 ptrace_newuop(lsq->ptrace_seq, "internal ld/st", lsq->PC, 0);
@@ -4593,6 +4706,7 @@ if(verbose) {
                 ruu_install_odep(lsq, /* odep_list[] index */0, out1);
                 ruu_install_odep(lsq, /* odep_list[] index */1, out2);
                 ruu_install_odep(lsq, /* odep_list[] index */2, out3); // FIXME check here
+  		
 
                 /* install operation in the RUU and LSQ */
                 n_dispatched++;
@@ -4600,6 +4714,8 @@ if(verbose) {
                 RUU_num++;
                 LSQ_tail = (LSQ_tail + 1) % LSQ_size;
                 LSQ_num++;
+
+
 
                 if (OPERANDS_READY(rs)) {
                     /* eff addr computation ready, queue it on ready list */
@@ -4627,6 +4743,8 @@ if(verbose) {
                 ruu_install_odep(rs, /* odep_list[] index */0, out1);
                 ruu_install_odep(rs, /* odep_list[] index */1, out2);
                 ruu_install_odep(rs, /* odep_list[] index */2, out3); // FIXME check here
+
+
 
                 /* install operation in the RUU */
                 n_dispatched++;
