@@ -1526,8 +1526,99 @@ enum stall_reason {
   STALL_DTLB_MISS,
   STALL_STORE_ADDR_NOT_READY,
   STALL_STORE_DATA_NOT_READY,
-  STALL_STORE_PORT_BUSY
+  STALL_STORE_PORT_BUSY,
+  STALL_FU_BUSY
 };
+
+/* ====== Classification enums ====== */
+typedef enum {
+  CAT_NONE = 0,
+  CAT_BadSpec,
+  CAT_RetireBlock_MEM,
+  CAT_RetireBlock_MULTDIV,
+  CAT_RetireBlock_Others,
+  CAT_CoreBoundEmpty,     /* includes “late-WB” one-cycle bubbles */
+  CAT_BackPressure,
+  CAT_FrontEnd
+} stall_cat_t;
+
+/* ====== Per-run counters (cycles spent in each bucket) ====== */
+static counter_t cyc_BadSpec               = 0;
+static counter_t cyc_RetireBlock_MEM       = 0;
+static counter_t cyc_RetireBlock_MULTDIV   = 0;
+static counter_t cyc_RetireBlock_Others    = 0;
+static counter_t cyc_CoreBoundEmpty        = 0;
+static counter_t cyc_BackPressure          = 0;
+static counter_t cyc_FrontEnd              = 0;
+
+/* convenience sum */
+static inline counter_t cyc_RetireBlock_sum(void) {
+  return cyc_RetireBlock_MEM + cyc_RetireBlock_MULTDIV + cyc_RetireBlock_Others;
+}
+
+/* ====== Per-cycle latches (reset each cycle) ====== */
+static int    R_this      = 0;        /* R(c): retired insts this cycle */
+static int    Hnr_this    = 0;        /* head not ready at commit? */
+static int    Recover_this= 0;        /* recovery in progress this cycle? */
+static int    Hmem_this   = 0;        /* head waiting for memory (load miss / DTLB / store port) */
+static int    Hmult_this  = 0;        /* head is long-latency mult/div/fp and not complete */
+static int    Hoth_this   = 0;        /* head not complete due to other FU */
+static int    ReadyEmpty  = 0;        /* ready queue empty (no issuables) */
+static int    ROBfull     = 0, LSQfull = 0;
+static int    ICacheMissF = 0, ITLBMissF = 0;   /* front-end signals for this cycle */
+static int    LateWB      = 0;        /* head not complete at commit, but WBed later in same cycle */
+
+/* head identity latched at commit start (for LateWB) */
+static unsigned int latewb_head_uop = 0;
+static int latewb_armed = 0;
+
+static void cycle_reset_classify_latches(void) {
+  R_this = Hnr_this = Recover_this = Hmem_this = Hmult_this = Hoth_this = 0;
+  ReadyEmpty = ROBfull = LSQfull = ICacheMissF = ITLBMissF = LateWB = 0;
+  latewb_head_uop = latewb_armed = 0;
+}
+
+static void classify_and_count_this_cycle(void) {
+  /* Only classify “bad”/interesting cycles when R(c) <= 1 as per your def */
+  int lowR = (R_this <= 1);
+
+  /* 1) BadSpec (highest priority) */
+  if (Recover_this) {
+    cyc_BadSpec++;
+    return;
+  }
+
+  /* 2) RetireBlock (head not ready) buckets */
+  if (lowR && Hnr_this) {
+    if (Hmem_this)            { cyc_RetireBlock_MEM++;      return; }
+    if (Hmult_this)           { cyc_RetireBlock_MULTDIV++;  return; }
+    /* if the head WB landed later this cycle, it’s a benign “late-WB” bubble:
+       count it under CoreBoundEmpty, not RetireBlock_Others */
+    if (LateWB)               { cyc_CoreBoundEmpty++;       return; }
+    /* otherwise genuine other head block */
+    cyc_RetireBlock_Others++; return;
+  }
+
+  /* 3) CoreBoundEmpty: low retire, head ready (or no head), readyq empty */
+  if (lowR && !Hnr_this && ReadyEmpty) {
+    cyc_CoreBoundEmpty++;
+    return;
+  }
+
+  /* 4) BackPressure: structures full (these can coexist with others; keep after head stalls) */
+  if (lowR && (ROBfull || LSQfull)) {
+    cyc_BackPressure++;
+    return;
+  }
+
+  /* 5) FrontEnd: icache/itlb miss starved the back end */
+  if (lowR && (ICacheMissF || ITLBMissF)) {
+    cyc_FrontEnd++;
+    return;
+  }
+
+  /* else CAT_NONE (do nothing) */
+}
 
 /*
  * processor core definitions and declarations
@@ -2271,6 +2362,12 @@ ruu_commit(void) {
     while (RUU_num > 0 && committed < ruu_commit_width) {
         struct RUU_station *rs = &(RUU[RUU_head]);
 
+	/* at top of ruu_commit(), per cycle (once) before while-loop): */
+        if (RUU_num > 0) latewb_head_uop = RUU[RUU_head].uop_id; else latewb_head_uop = 0;
+
+        /* set local committed=0 as you already do; after the while loop, write R_this=committed */
+
+
         if (!rs->completed) {
             /* at least RUU entry must be complete */
             //break;
@@ -2278,12 +2375,35 @@ ruu_commit(void) {
 
 	    if (!rs->last_block) { rs->last_block = STALL_HEAD_NOT_COMPLETE; rs->last_block_cycle = rs->last_block_cycle ? rs->last_block_cycle : sim_cycle; }
 	    log_head_stall(rs, NULL, STALL_HEAD_NOT_COMPLETE);
+
+	    Hnr_this = 1;
+            /* classify sub-cause later; for now mark as “other” */
+            Hoth_this = 1;
+
+	    if (!rs->issued) {
+                /* never issued → this is an issue-stage problem, NOT a long-latency wait */
+                Hoth_this = 1;       // or make a separate "IssueBlocked" bucket if you want
+                latewb_head_uop = rs->uop_id; latewb_armed = 1;
+                break;
+            }
+	    int cls = rs->op;
+            if (cls == 96 || cls == 99 || cls == 101 || cls == 103 /* etc. */) {
+            Hmult_this = 1;      // long-latency op at head
+            } else {
+            Hoth_this  = 1;      // other non-mem long-ish ops (e.g., ALU with oplat > 1)
+            }
+            latewb_head_uop = rs->uop_id; latewb_armed = 1;
+
 	    break;
         }
+
+
+
 
         /* default commit events */
         events = 0;
 
+       
         /* load/stores must retire load/store queue entry as well */
         if (RUU[RUU_head].ea_comp) {
 
@@ -2297,11 +2417,26 @@ ruu_commit(void) {
                 /* load/store operation is not yet complete */
                 //break;
                 fprintf(stdout, "  (lsq-not-complete: ea_comp=%d addr_ready=%d data_ready=%d)\n", RUU[RUU_head].ea_comp, STORE_ADDR_READY(&LSQ[LSQ_head]), OPERANDS_READY(&LSQ[LSQ_head]));
+		
 		/* load/store operation is not yet complete */
-		    enum stall_reason why = STALL_LSQ_NOT_COMPLETE;
-		    if (LSQ[LSQ_head].last_block) why = LSQ[LSQ_head].last_block;
-		    log_head_stall(rs, &LSQ[LSQ_head], why);
-		    break;
+		enum stall_reason why = STALL_LSQ_NOT_COMPLETE;
+		if (LSQ[LSQ_head].last_block) why = LSQ[LSQ_head].last_block;
+		log_head_stall(rs, &LSQ[LSQ_head], why);
+		
+		Hnr_this = 1;
+                /* be specific if you stamped a mem cause: */
+                if (LSQ[LSQ_head].last_block == STALL_LOAD_MISS || LSQ[LSQ_head].last_block == STALL_DTLB_MISS)
+                Hmem_this = 1;
+                else
+                Hoth_this = 1; /* unknown exact mem cause; leave as 'others' if you prefer */
+		latewb_head_uop = RUU[RUU_head].uop_id; latewb_armed = 1;
+                
+
+		fprintf(stdout, "  (lsq: issued=%d queued=%d completed=%d addr_ready=%d data_ready=%d)\n",
+                LSQ[LSQ_head].issued, LSQ[LSQ_head].queued, LSQ[LSQ_head].completed,
+                STORE_ADDR_READY(&LSQ[LSQ_head]), OPERANDS_READY(&LSQ[LSQ_head]));
+                
+		break;
             }
 
             if ((MD_OP_FLAGS(LSQ[LSQ_head].op) & (F_MEM | F_STORE))
@@ -2346,6 +2481,10 @@ ruu_commit(void) {
 		    LSQ[LSQ_head].last_block = STALL_STORE_PORT_BUSY;
 		    if (!LSQ[LSQ_head].last_block_cycle) LSQ[LSQ_head].last_block_cycle = sim_cycle;
 		    log_head_stall(rs, &LSQ[LSQ_head], STALL_STORE_PORT_BUSY);
+
+		    Hnr_this = 1;
+                    Hmem_this = 1;  /* structural mem stall at retire */
+		    latewb_head_uop = RUU[RUU_head].uop_id; latewb_armed = 1;
                     break;
                 }
             }
@@ -2359,6 +2498,11 @@ ruu_commit(void) {
 
             /* if ((MD_OP_FLAGS(LSQ[LSQ_head].op) & F_ATOMIC) == F_ATOMIC)
                     atomic_lock = false; */
+	    /* (A) LSQ commit print: right BEFORE advancing LSQ_head */
+	    unsigned lsq_uop   = LSQ[LSQ_head].uop_id;
+	    md_addr_t lsq_pc   = LSQ[LSQ_head].PC;    /* if stored; else omit */
+	    enum md_opcode lsq_op = LSQ[LSQ_head].op; 
+	    fprintf(stdout,"CYCLE %lld  COMMIT  LSQ uop=%u op=%d (%s)\n", (long long)sim_cycle, lsq_uop, lsq_op, MD_OP_NAME(lsq_op));
 
             /* commit head of LSQ as well */
             LSQ_head = (LSQ_head + 1) % LSQ_size;
@@ -2398,6 +2542,14 @@ ruu_commit(void) {
         ptrace_newstage(RUU[RUU_head].ptrace_seq, PST_COMMIT, events);
         ptrace_endinst(RUU[RUU_head].ptrace_seq);
 
+	/* (B) RUU commit print: capture BEFORE advancing RUU_head */
+	unsigned ruu_uop = RUU[RUU_head].uop_id;
+	md_addr_t ruu_pc = RUU[RUU_head].PC;
+	enum md_opcode ruu_op = RUU[RUU_head].op;
+
+	/* Print which RUU uop committed */
+        fprintf(stdout, "CYCLE %lld  COMMIT  RUU uop=%u pc=0x%08llx op=%d (%s)\n", (long long)sim_cycle, ruu_uop, (unsigned long long)ruu_pc, ruu_op, MD_OP_NAME(ruu_op));
+
         /* commit head entry of RUU */
         RUU_head = (RUU_head + 1) % RUU_size;
         RUU_num--;
@@ -2416,14 +2568,14 @@ ruu_commit(void) {
                 fprintf(stderr, "|               exit ruu_commit----|\n");
                 fprintf(stderr, "===================================\n");
             }
-    if(committed < 2) {
-	    committed = committed ? 1 : 0;
-	    printf("cycle : %lld, committed == %d\n", sim_cycle, committed);
-    }
     if (committed > 0) {
+	    fprintf(stdout, "CYCLE %lld  COMMIT progress: +%d\n", (long long)sim_cycle, committed);
 	    stall_active = 0;
 	    last_head_uop_id = 0;
+    }else {
+	    fprintf(stdout, "CYCLE %lld  COMMIT progress: +%d\n", (long long)sim_cycle, committed);
     }
+    R_this = committed;
 }
 
 
@@ -2549,6 +2701,7 @@ if(verbose) {
         /* operation has completed */
         rs->completed = TRUE;
 
+
         /* does this operation reveal a mis-predicted branch? */
         if (rs->recover_inst) {
             if (rs->in_LSQ)
@@ -2561,6 +2714,20 @@ if(verbose) {
 
             /* stall fetch until I-fetch and I-decode recover */
             ruu_fetch_issue_delay = ruu_branch_penalty;
+       
+	    /* NEW */
+	    
+	    int taken         = (rs->next_PC != rs->PC + sizeof(md_inst_t));
+            int pred_taken    = (rs->pred_PC != rs->PC + sizeof(md_inst_t));
+	    
+	    fprintf(stdout,
+            "CYCLE %lld  RECOVER  uop=%u op=%d(%s) from=0x%08llx to=0x%08llx "
+            "taken=%d pred_taken=%d penalty=%d\n",
+            (long long)sim_cycle, rs->uop_id, rs->op, MD_OP_NAME(rs->op),
+            (unsigned long long)rs->PC, (unsigned long long)rs->next_PC,
+            taken, pred_taken, ruu_fetch_issue_delay);
+
+	    Recover_this = 1;
 
             /* continue writeback of the branch/control instruction */
         }
@@ -2585,8 +2752,14 @@ if(verbose) {
         /* entered writeback stage, indicate in pipe trace */
         ptrace_newstage(rs->ptrace_seq, PST_WRITEBACK,
                         rs->recover_inst ? PEV_MPDETECT : 0);
+	
+	if (Hnr_this && latewb_head_uop && rs->uop_id == latewb_head_uop) {
+        LateWB = 1;
+        }
 
-        /* broadcast results to consuming operations, this is more efficiently
+        fprintf(stdout, "CYCLE %lld  WB  uop=%u pc=0x%08llx op=%d,(%s)\n", (long long)sim_cycle, rs->uop_id, (unsigned long long)rs->PC, rs->op, MD_OP_NAME(rs->op));
+        
+	/* broadcast results to consuming operations, this is more efficiently
          accomplished by walking the output dependency chains of the
 	 completed instruction */
         for (i = 0; i < MAX_ODEPS; i++) {
@@ -2780,6 +2953,7 @@ ruu_issue(void) {
                 fprintf(stderr, "|++++ Enter ruu_issue              |\n");
                 fprintf(stderr, "===================================\n");
             }
+    fprintf(stdout, "Cycle %lld: --- issuing instructions ---\n", sim_cycle);
 
     /* FIXME: could be a little more efficient when scanning the ready queue */
 
@@ -2961,6 +3135,7 @@ ruu_issue(void) {
                             /* use deterministic functional unit latency */
                             eventq_queue_event(rs, sim_cycle + fu->oplat);
 
+			    fprintf(stdout, "CYCLE %lld  ALU?? uop=%u op=%d(%s) lat:%d\n", (long long)sim_cycle, rs->uop_id, rs->op, MD_OP_NAME(rs->op), fu->oplat);
                             /* entered execute stage, indicate in pipe trace */
                             ptrace_newstage(rs->ptrace_seq, PST_EXECUTE,
                                             rs->ea_comp ? PEV_AGEN : 0);
@@ -4968,8 +5143,16 @@ if(verbose) {
                         cache_access(cache_il1, Read, IACOMPRESS(fetch_regs_PC),
                                      NULL, ISCOMPRESS(fetch_regs_PC), sim_cycle,
                                      NULL, NULL);
-                if (lat > cache_il1_lat)
+                if (lat > cache_il1_lat) {
                     last_inst_missed = TRUE;
+
+		    /* NEW */
+		    fprintf(stdout, "CYCLE %lld  IFETCH  I$MISS @0x%08llx lat=%d\n",
+                    (long long)sim_cycle, (unsigned long long)fetch_regs_PC, lat);
+
+		    ICacheMissF = 1;
+		}
+		    
             }
 
             if (itlb) {
@@ -4979,8 +5162,12 @@ if(verbose) {
                         cache_access(itlb, Read, IACOMPRESS(fetch_regs_PC),
                                      NULL, ISCOMPRESS(fetch_regs_PC), sim_cycle,
                                      NULL, NULL);
-                if (tlb_lat > 1)
+                if (tlb_lat > 1) {
                     last_inst_tmissed = TRUE;
+                    fprintf(stdout, "CYCLE %lld  IFETCH  ITLB$MISS @0x%08llx lat=%d\n",
+                    (long long)sim_cycle, (unsigned long long)fetch_regs_PC, tlb_lat);
+		    ITLBMissF   = 1;
+		}
 
                 /* I-cache/I-TLB accesses occur in parallel */
                 lat = MAX(tlb_lat, lat);
@@ -5270,8 +5457,11 @@ sim_main(void) {
 
         /* indicate new cycle in pipetrace */
         ptrace_newcycle(sim_cycle);
-
-        /* commit entries from RUU/LSQ to architected register file */
+        
+	/* call once per cycle BEFORE ruu_commit() */
+        cycle_reset_classify_latches();
+        
+	/* commit entries from RUU/LSQ to architected register file */
         ruu_commit();
 
         /* service function unit release events */
@@ -5320,13 +5510,51 @@ sim_main(void) {
         RUU_fcount += ((RUU_num == RUU_size) ? 1 : 0);
         LSQ_count += LSQ_num;
         LSQ_fcount += ((LSQ_num == LSQ_size) ? 1 : 0);
+
+	ROBfull  = (RUU_num >= RUU_size);
+        LSQfull  = (LSQ_num >= LSQ_size);
+        ReadyEmpty = (ready_queue == NULL);
+	if(ReadyEmpty) fprintf(stdout, "ReadyEmpty");
+
+	if(0 < sim_cycle && sim_cycle < 100000) classify_and_count_this_cycle();
         /* go to next cycle */
         sim_cycle++;
+	if(sim_cycle == 100000){
+		/* totals */
+            counter_t total_cycles = 100000;  /* or your final cycle count */
 
+            /* density of RetireBlock* */
+            counter_t retireblock_sum = cyc_RetireBlock_sum();
+	    double BadSpec_density = total_cycles ? ((unsigned long long)cyc_BadSpec / (double)total_cycles) : 0.0;
+	    double retireblock_MEM_density = total_cycles ? ((unsigned long long)cyc_RetireBlock_MEM / (double)total_cycles) : 0.0;
+	    double retireblock_MULTDIV_density = total_cycles ? ((unsigned long long)cyc_RetireBlock_MULTDIV / (double)total_cycles) : 0.0;
+	    double retireblock_Others_density = total_cycles ? ((unsigned long long)cyc_RetireBlock_Others / (double)total_cycles) : 0.0;
+            double retireblock_density = total_cycles ? ((double)retireblock_sum / (double)total_cycles) : 0.0;
+
+            /* dump */
+            fprintf(stderr, "\n=== Commit Stall Breakdown ===\n");
+	    fprintf(stderr, "BadSpec cycles                : %12llu\n", (unsigned long long)cyc_BadSpec);
+	    fprintf(stderr, "RetireBlock MEM               : %12llu\n", (unsigned long long)cyc_RetireBlock_MEM);
+            fprintf(stderr, "RetireBlock MULTDIV           : %12llu\n", (unsigned long long)cyc_RetireBlock_MULTDIV);
+	    fprintf(stderr, "RetireBlock Others            : %12llu\n", (unsigned long long)cyc_RetireBlock_Others);
+	    fprintf(stderr, "CoreBoundEmpty (incl LateWB)  : %12llu\n", (unsigned long long)cyc_CoreBoundEmpty);
+	    fprintf(stderr, "BackPressure (ROB/LSQ full)   : %12llu\n", (unsigned long long)cyc_BackPressure);
+	    fprintf(stderr, "FrontEnd (I$ / ITLB)          : %12llu\n", (unsigned long long)cyc_FrontEnd);
+	    fprintf(stderr, "\n=== RetireBlock Density ===\n");
+	    fprintf(stderr, "BadSpec density               : %12.4f\n", BadSpec_density);
+	    fprintf(stderr, "RetireBlock MEM density        : %12.4f\n", retireblock_MEM_density);
+	    fprintf(stderr, "RetireBlock MULTDIV density    : %12.4f\n", retireblock_MULTDIV_density);
+	    fprintf(stderr, "RetireBlock Others density     : %12.4f\n", retireblock_Others_density);
+	    fprintf(stderr, "Total RetireBlock* density     : %12.4f\n", retireblock_density);
+
+	}
         /* finish early? */
-        if (max_insts && sim_num_insn >= max_insts)
+        if (max_insts && sim_num_insn >= max_insts){
             return;
+	}
     }
+
+
 }
 
 void sim_check_ans() {
