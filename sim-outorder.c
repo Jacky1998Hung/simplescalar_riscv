@@ -77,6 +77,7 @@
 #include "sim.h"
 #include "encode.def"
 #include "ring_buffer.h"
+#include "retire_trace.h"
 /*
  * This file implements a very detailed out-of-order issue superscalar
  * processor with a two-level memory system and speculative execution support.
@@ -1500,6 +1501,9 @@ sim_load_prog(char *fname,        /* program to load */
 
     /* initialize the DLite debugger */
     dlite_init(simoo_reg_obj, simoo_mem_obj, simoo_mstate_obj);
+
+    /* csv initialize for trace */
+    retire_trace_init("retire_trace.csv", 1);
 }
 
 /* dump simulator-specific auxiliary simulator statistics */
@@ -1514,6 +1518,7 @@ void
 sim_uninit(void) {
     if (ptrace_nelt > 0)
         ptrace_close();
+    retire_trace_close();
 }
 
 /* ROB head blockage analysis */
@@ -1594,7 +1599,7 @@ static void classify_and_count_this_cycle(void) {
     if (Hmult_this)           { cyc_RetireBlock_MULTDIV++;  return; }
     /* if the head WB landed later this cycle, it’s a benign “late-WB” bubble:
        count it under CoreBoundEmpty, not RetireBlock_Others */
-    if (LateWB)               { cyc_CoreBoundEmpty++;       return; }
+//    if (LateWB)               { cyc_CoreBoundEmpty++;       return; }
     /* otherwise genuine other head block */
     cyc_RetireBlock_Others++; return;
   }
@@ -1619,6 +1624,52 @@ static void classify_and_count_this_cycle(void) {
 
   /* else CAT_NONE (do nothing) */
 }
+
+/* === cause enum 用來做 ECG/episodes/滑窗 === */
+enum cause {
+  RETIRING = 0,
+  BADSPEC,
+  MEM,
+  MULTDIV,
+  OTHER,        
+  CORE,         
+  BACKPRESSURE, 
+  FRONTEND
+};
+
+static inline enum cause classify_cycle(void)
+{
+
+  /* 1) 恢復期最高優先權 */
+  if (Recover_this)
+    return BADSPEC;
+
+  /* 2) RetireBlock：head 不 ready（含 MEM/MULTDIV/其他） */
+  if (Hnr_this) {
+    if (Hmem_this)   return MEM;       /* load miss / DTLB / store-port 等 */
+    if (Hmult_this)  return MULTDIV;   /* 長延遲 mul/div/fp */
+  /*  if (LateWB)      return CORE;       一拍晚 WB 的良性泡，歸 CoreBoundEmpty */
+    return OTHER;                      /* 其他 head 阻塞 */
+  }
+
+  /* 3) CoreBoundEmpty：low retire & head ready(or 無 head) & readyq 空  */
+  if (!Hnr_this && ReadyEmpty){
+	  fprintf(stdout, "Hnr_this :, %d, ReadyEmpty: %d\n", Hnr_this, ReadyEmpty);
+    return CORE;
+  }
+
+  /* 4) BackPressure：結構滿（放在 head stall 之後，以免搶標籤） */
+  if ((ROBfull || LSQfull))
+    return BACKPRESSURE;
+
+  /* 5) FrontEnd：i-cache/iTLB 等前端飢餓 */
+  if ((ICacheMissF || ITLBMissF))
+    return FRONTEND;
+
+  /* 6) 其餘就是正常退休（可視需求：若 R_this==0 仍可回 RETIRING） */
+  return RETIRING;
+}
+
 
 /*
  * processor core definitions and declarations
@@ -1720,6 +1771,16 @@ struct RUU_station_buffer {
 static struct RUU_station *RUU;        /* register update unit */
 static int RUU_head, RUU_tail;        /* RUU head and tail pointers */
 static int RUU_num;            /* num entries currently in RUU */
+
+static int scan_ready_behind(int max_scan) {
+  int ready=0;
+  for (int i=1; i < MIN(RUU_num, max_scan); i++) {
+    struct RUU_station *r = &RUU[(RUU_head + i) % RUU_size];
+    if (r->completed) ready++; else break; // 遇到下一個阻塞就停
+  }
+  return ready;
+}
+
 
 /* allocate and initialize register update unit (RUU) */
 static void
@@ -5514,14 +5575,20 @@ sim_main(void) {
 	ROBfull  = (RUU_num >= RUU_size);
         LSQfull  = (LSQ_num >= LSQ_size);
         ReadyEmpty = (ready_queue == NULL);
-	if(ReadyEmpty) fprintf(stdout, "ReadyEmpty");
+	if(ReadyEmpty == 0) fprintf(stdout, "ReadyEmpty");
 
-	if(0 < sim_cycle && sim_cycle < 100000) classify_and_count_this_cycle();
+	if(0 < sim_cycle && sim_cycle < 10000) {
+		classify_and_count_this_cycle();
+		enum cause c = classify_cycle();
+		int ready_b  = (c != RETIRING) ? scan_ready_behind(64) : 0;
+		double util  = (double)RUU_num / (double)RUU_size;
+		retire_trace_tick(sim_cycle, (int)c, R_this, ready_b, util);
+	}
         /* go to next cycle */
         sim_cycle++;
-	if(sim_cycle == 100000){
+	if(sim_cycle == 10000){
 		/* totals */
-            counter_t total_cycles = 100000;  /* or your final cycle count */
+            counter_t total_cycles = 10000;  /* or your final cycle count */
 
             /* density of RetireBlock* */
             counter_t retireblock_sum = cyc_RetireBlock_sum();
@@ -5550,11 +5617,12 @@ sim_main(void) {
 	}
         /* finish early? */
         if (max_insts && sim_num_insn >= max_insts){
+		retire_trace_close();
             return;
 	}
     }
 
-
+retire_trace_close();
 }
 
 void sim_check_ans() {
